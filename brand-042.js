@@ -1,0 +1,2 @@
+window.COMPRESSOR_DB_BRANDS=window.COMPRESSOR_DB_BRANDS||{};
+window.COMPRESSOR_DB_BRANDS["كيويبجيل انفرتر"]=[{"model":"NPT12FSC","displacement":12.1,"rpm":1800,"kcal":300,"btu":1190.4,"temp_capacity":{"-23.3":348.9},"application":"LBP","refrigerant":"R290"},{"model":"NLT60FSN","displacement":5.98,"rpm":1800,"kcal":466,"btu":1849.088,"temp_capacity":{"7.2+":541.958},"application":"HMBP","refrigerant":"R290"}];

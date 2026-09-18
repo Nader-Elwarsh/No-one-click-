@@ -1,0 +1,9 @@
+<!doctype html><meta charset="utf-8"><title>browser interactive harness</title><body><iframe id="app" src="compcodes.html" style="width:100%;height:600px"></iframe><pre id="result">WAITING</pre><script>
+const out=document.getElementById('result'),frame=document.getElementById('app');
+frame.addEventListener('load',()=>setTimeout(()=>{
+  const d=frame.contentDocument,search=d.getElementById('compSearch'),review=d.getElementById('compDuplicatesToggle'),panel=d.getElementById('compDuplicatesPanel');
+  if(!search||!review||!panel){out.textContent='INTERACTIVE_FAIL:controls';return}
+  search.value='Samsung';search.dispatchEvent(new Event('input',{bubbles:true}));review.click();
+  setTimeout(()=>{out.textContent=panel.classList.contains('hidden')?'INTERACTIVE_FAIL:review-panel':'INTERACTIVE_PASS';},1800);
+},900));
+</script>

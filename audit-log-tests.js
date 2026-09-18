@@ -1,0 +1,17 @@
+const fs = require('fs'), vm = require('vm'), assert = require('assert');
+const store = {};
+const localStorage = { getItem: k => store[k] ?? null, setItem: (k, v) => { store[k] = String(v); }, removeItem: k => delete store[k] };
+const crypto = { randomUUID: () => 'audit-test-id' };
+const window = { localStorage, crypto };
+const context = vm.createContext({ window, localStorage, crypto, console });
+vm.runInContext(fs.readFileSync(`${__dirname}/audit-log.js`, 'utf8'), context);
+window.auditLog('اختبار', 'أمر شغل', 'r1', 'تفاصيل عادية');
+const rows = window.getAuditLog();
+assert.strictEqual(rows.length, 1, 'audit row created');
+assert.strictEqual(rows[0].entityId, 'r1', 'entity id retained');
+assert.strictEqual(rows[0].details, 'تفاصيل عادية', 'safe detail retained');
+for (let i = 0; i < 350; i++) window.auditLog('تحديث', 'خزنة', String(i), 'x');
+assert(window.getAuditLog().length <= 300, 'audit log is bounded');
+assert.strictEqual(window.clearAuditLog(), true, 'audit log can be cleared internally');
+assert.strictEqual(window.getAuditLog().length, 0, 'audit log cleared');
+console.log('audit-log-tests: PASS');

@@ -1,0 +1,35 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><script>try{var t=localStorage.getItem("wf_theme");var d=t==="dark"||(t!=="light"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script><meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#001b4d"><link rel="manifest" href="manifest.json?v=11.95"><link rel="icon" type="image/png" sizes="192x192" href="icon-192-v11-47.png"><link rel="apple-touch-icon" href="icon-192-v11-47.png"><title>أكواد الكباسات (القدرات) | الورشة الفنية</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="print-share.css"><script src="theme.js" defer></script><script src="event-delegation.js" defer></script></head><body><script src="app-lock.js"></script>
+<main class="page"><div class="page-topbar"><a class="back" href="index.html">← الرئيسية</a><button class="theme-toggle-btn no-print" type="button" data-wf-click="toggleTheme" aria-label="تبديل المظهر" title="الوضع الداكن">🌙</button></div>
+<div class="page-head"><h1>🧊 أكواد الكباسات (القدرات)</h1><div class="section-actions"><button id="compAddToggle" class="primary small-btn" type="button">➕ إضافة موديل ناقص</button><button id="compDuplicatesToggle" class="secondary small-btn" type="button">🔎 مراجعة التكرارات</button></div></div>
+<p class="hint">مرجع بحث عن قدرة أي كباس بموديله — القدرة بالحصان (بالنسبة زي 1/6 أو 1 1/2)، القدرة بالـ BTU، نوع الفريون، والتطبيق تلاقيهم دايمًا في أعلى الكارت؛ مكثف التشغيل ومكثف الإقلاع وكمية الزيت (لو موجودين) تحتهم مباشرة؛ والباقي (الأمبير، الاستهلاك بالوات، التردد، الإزاحة...) تحت "🔎 بيانات إضافية". لو الكباس ليه بدائل بمواصفات قريبة من شركات تانية في القاعدة، هتلاقيها تحت سطر "🔄 بدائل بمواصفات قريبة" — للاسترشاد بس، اتأكد من التوافق الفعلي قبل الاستخدام. اكتب أي جزء من الكود، أو ابحث بأي قيمة تانية زي نوع الفريون — وتقدر كمان تدور على أي كباس من البحث الشامل 🔍 في أي صفحة بالنظام. مستقل تمامًا عن العملاء وأوامر الشغل — بيانات مرجعية بس.</p>
+<div id="compAddBox" class="quick-add hidden wide" aria-labelledby="compAddTitle">
+<h3 id="compAddTitle">➕ إضافة موديل ناقص من عندك</h3>
+<p class="hint">لو دورت على كود مش موجود في المرجع، تقدر تضيفه هنا وهيتحفظ على جهازك ويظهر في نتائج البحث بعد كده (متروحش الملف الأصلي، وممكن تحذفه في أي وقت).</p>
+<div class="form-grid">
+  <label>كود الموديل *<input id="ccModel" placeholder="مثال: QD35Y"></label>
+  <label>الماركة<input id="ccBrand" placeholder="مثال: Sanyo"></label>
+  <label>القدرة (H P)<input id="ccHp" placeholder="مثال: 1/4 أو 1 1/2"></label>
+  <label>الأمبير (RLA)<input id="ccAmp" placeholder="مثال: 1.2"></label>
+  <label>القدرة (BTU)<input id="ccBtu" placeholder="مثال: 450"></label>
+  <label>الفريون<input id="ccFreon" placeholder="مثال: R134a"></label>
+  <label>التطبيق<input id="ccApp" placeholder="مثال: LBP"></label>
+  <label>مكثف التشغيل<input id="ccRunCap" placeholder="اختياري"></label>
+  <label>مكثف الإقلاع/التقويم<input id="ccStartCap" placeholder="اختياري"></label>
+  <label>كمية الزيت<input id="ccOil" placeholder="اختياري"></label>
+  <label class="wide">ملاحظات<input id="ccNote" placeholder="اختياري"></label>
+</div>
+<div class="actions"><button id="compSaveCustom" type="button" class="primary">💾 حفظ</button><button id="compCancelAdd" type="button" class="secondary">إلغاء</button></div>
+</div>
+<div id="compFavorites"></div>
+<section id="compDuplicatesPanel" class="panel hidden" aria-labelledby="compDuplicatesTitle"><h2 id="compDuplicatesTitle">🔎 مراجعة تكرارات قاعدة الأكواد</h2><p class="hint">السجلات المرجعية لا تُعدّل تلقائيًا. يمكن دمج الإضافات اليدوية المتوافقة فقط بعد تأكيدك، أو تنزيل خطة مراجعة للسجلات المرجعية.</p><div class="actions"><button id="compMergeCustom" type="button" class="secondary small-btn">🧩 دمج الإضافات المتوافقة</button><button id="compExportDuplicatePlan" type="button" class="secondary small-btn">⬇️ تنزيل خطة المراجعة</button></div><div id="compDuplicatesResult" aria-live="polite"></div></section>
+<div class="delete-actions no-print"><button id="compExportCustom" class="secondary small-btn" type="button">⬇️ تصدير الإضافات اليدوية (للمشاركة)</button><label class="secondary small-btn backup-import-btn">⬆️ استيراد إضافات من فني تاني<input id="compImportCustom" type="file" accept="application/json"></label></div>
+<div class="filters">
+  <input id="compSearch" class="search" type="search" autocomplete="off" aria-label="البحث في أكواد الكباسات" placeholder="🔍 اكتب كود الموديل أو أي قيمة (مثال: R600a)">
+  <select id="compBrandFilter" aria-label="تصفية حسب الماركة"></select>
+</div>
+<p class="hint" id="compResultCount" aria-live="polite"></p>
+<div id="compResults" aria-live="polite" aria-busy="true"></div>
+</main><script src="notif-shared.js"></script>
+  <script src="shared-data.js"></script><script src="audit-log.js"></script><script src="global-search.js"></script><script src="bottom-nav.js"></script><script src="image-store.js"></script><script src="migrations.js"></script><script src="treasury.js"></script><script src="wallets.js"></script><script src="tasks.js"></script><script src="app-shared.js"></script><script src="app-dashboard-reports.js"></script><script src="app-customers.js"></script><script src="app-devices.js"></script><script src="app-requests.js"></script><script src="app-settings-lists.js"></script><script src="app-parts.js"></script><script src="app-fault-codes.js"></script><script src="app-compressor-codes.js"></script><script src="app-settings.js"></script><script src="app-delete-tools.js"></script><script src="app-route-followup.js"></script><script src="app-data-management.js"></script><script src="app-quick-add.js"></script><script src="app-notifications-bootstrap.js"></script><script src="print-share.js"></script>
+<script>document.addEventListener("DOMContentLoaded",()=>initCompressorCodesPage())</script>
+</body></html>
