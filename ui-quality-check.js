@@ -1,6 +1,9 @@
 const fs=require('fs'),path=require('path'),assert=require('assert');
 const root=__dirname;const read=n=>fs.readFileSync(path.join(root,n),'utf8');
 const html=read('compcodes.html'),settings=read('settings.html'),css=read('style.css');
+const simpleUi=read('workshop-mini-simple-ui.js'),sharedData=read('shared-data.js');
+assert(sharedData.includes('function debounce('),'shared data must provide the common debounce helper');
+assert(simpleUi.includes('debounce(renderCustomers, 120)')&&simpleUi.includes('debounce(renderDevices, 120)')&&simpleUi.includes('debounce(renderParts, 120)')&&simpleUi.includes('debounce(renderRequests, 120)'),'main list searches must use debounce');
 assert(html.includes('aria-label="البحث في أكواد الكباسات"'),'compressor search needs accessible label');
 assert(html.includes('aria-live="polite"'),'compressor result needs live region');
 assert(html.includes('aria-busy="true"'),'compressor result needs loading state');

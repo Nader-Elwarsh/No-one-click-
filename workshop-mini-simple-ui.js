@@ -335,6 +335,10 @@
       none: "بدون أي أمر شغل", city: "🏙️ عملاء المدن", village: "🌾 عملاء القرى",
       stale: "⏳ لم يتردد من فترة", unpaid: "💰 عليه متبقي غير محصل"
     }[bucket] || "كل العملاء";
+    const deviceCountByCustomer = new Map();
+    for (const d of deviceRows()) deviceCountByCustomer.set(d.customerId, (deviceCountByCustomer.get(d.customerId) || 0) + 1);
+    const requestCountByCustomer = new Map();
+    for (const r of requestRows()) requestCountByCustomer.set(r.customerId, (requestCountByCustomer.get(r.customerId) || 0) + 1);
     const sortSelectHtml = `<select id="customerSortSelect" data-wf-event="change" data-wf-code="renderCustomers()">
       <option value="newest" ${sortKey === "newest" ? "selected" : ""}>الأحدث أولًا</option>
       <option value="oldest" ${sortKey === "oldest" ? "selected" : ""}>الأقدم أولًا</option>
@@ -343,8 +347,8 @@
     el.innerHTML = `
       <div class="simple-list-head"><b>${title}</b><div class="simple-list-head-actions">${sortSelectHtml}<button type="button" class="secondary small-btn" data-wf-event="click" data-wf-code="hideAllCustomers()">رجوع للملخص</button></div></div>
       ${filtered.length ? filtered.map(c => {
-        const ds = deviceRows().filter(d => d.customerId === c.id).length;
-        const rs = requestRows().filter(r => r.customerId === c.id).length;
+        const ds = deviceCountByCustomer.get(c.id) || 0;
+        const rs = requestCountByCustomer.get(c.id) || 0;
         const ao = activeOrdersForCustomer(c.id);
         const hw = hasWorkshopDeviceForCustomer(c.id);
         const lastDate = customerLastContactDate(c.id);
@@ -423,9 +427,10 @@
     }
     const q = ($("deviceSearch")?.value || "").toLowerCase().trim();
     const bucket = state.deviceBucket || "";
+    const customerById = new Map(customerRows().map(c => [c.id, c]));
     const filtered = all.filter(d => {
       if (bucket && !deviceBucketMatch(d, bucket)) return false;
-      const c = customerRows().find(x => x.id === d.customerId) || {};
+      const c = customerById.get(d.customerId) || {};
       const text = [c.name,c.phone,d.type,d.category,d.brand,d.model,d.desc,addressText(c.mainAddress||{}),addressText(c.extraAddress||{})].filter(Boolean).join(" ").toLowerCase();
       return !q || text.includes(q);
     });
@@ -444,7 +449,7 @@
     el.innerHTML = `<div class="simple-list-head"><b>${title}</b><div class="simple-list-head-actions">${sortSelectHtml}<button type="button" class="secondary small-btn" data-wf-event="click" data-wf-code="hideAllDevices()">رجوع للملخص</button></div></div>
       ${filtered.length ? filtered.map(d => {
         const ao = activeOrdersForDevice(d.id); const age = worstRequestAgeInfo(ao);
-        const cust = arr(K.c).find(x => x.id === d.customerId) || {};
+        const cust = customerById.get(d.customerId) || {};
         const latest = ao.length ? ao.slice().sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0))[0] : null;
         return `<div class="simple-record${age ? " " + age.cls : ""}"><div class="simple-record-icon">🔧</div><div class="simple-record-main"><a href="device.html?id=${d.id}"><b>${esc2(d.type)} — ${esc2(d.brand)}</b></a><span>${esc2(d.category||"—")} • ${esc2(d.model||"بدون موديل")}</span><small>👤 ${esc2(customerName(d.customerId))}</small>${cust.phone ? `<small>${`<a class="tel-link" href="tel:${esc2(cust.phone)}" target="_blank" rel="noopener">📞 ${esc2(cust.phone)}</a>`}</small>` : ""}<small>${ao.length ? `🔴 ${ao.length} أمر فعال${latest ? ` (${esc2(latest.status)}${latest.fault ? ` — ${esc2(latest.fault)}` : ""})` : ""}` : "لا يوجد أمر فعال"}${hasWorkshopDevice(d.id) ? " • 🏭 في الورشة" : ""}${age ? ` • <span class="age-badge ${age.cls}" title="⏱️ أقدم أمر مفتوح: ${esc2(age.range)}">${age.dot} ${esc2(age.label)}</span>` : ""}</small></div><div class="simple-record-actions"><a class="secondary small-btn" href="device.html?id=${d.id}">فتح</a><button class="danger-btn small-btn" data-wf-event="click" data-wf-code="deleteDeviceRecord('${d.id}')">حذف</button></div></div>`;
       }).join("") : `<div class="item">لا توجد نتائج.</div>`}`;
@@ -910,10 +915,10 @@
       $(id)?.classList.add("hidden");
     });
 
-    if ($("customerSearch")) $("customerSearch").oninput = renderCustomers;
-    if ($("deviceSearch")) $("deviceSearch").oninput = renderDevices;
-    if ($("partSearch")) $("partSearch").oninput = renderParts;
-    if ($("requestSearch")) $("requestSearch").oninput = renderRequests;
+    if ($("customerSearch")) $("customerSearch").oninput = debounce(renderCustomers, 120);
+    if ($("deviceSearch")) $("deviceSearch").oninput = debounce(renderDevices, 120);
+    if ($("partSearch")) $("partSearch").oninput = debounce(renderParts, 120);
+    if ($("requestSearch")) $("requestSearch").oninput = debounce(renderRequests, 120);
 
     renderCustomers();
     renderDevices();

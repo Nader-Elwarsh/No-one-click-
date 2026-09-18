@@ -17,7 +17,7 @@
 /* ---------------------------------------------------------------------
    قراءة وحساب الأرصدة
 --------------------------------------------------------------------- */
-function walletTxEntries(){return arr(K.wtx).filter(x=>!x.deleted)}
+function walletTxEntries(){return (typeof arrCached==="function"?arrCached(K.wtx):arr(K.wtx)).filter(x=>!x.deleted)}
 function walletTxFor(walletName){return walletTxEntries().filter(x=>x.wallet===walletName)}
 function walletRawBalance(walletName){return walletTxFor(walletName).reduce((a,x)=>a+(x.type==="in"?(+x.amount||0):-(+x.amount||0)),0)}
 // حد أقصى اختياري لمحفظة معينة (زي إنستاباي) — لو موجود، الرصيد المعروض/المحسوب

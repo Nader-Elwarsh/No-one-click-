@@ -22,7 +22,18 @@ assert(read('settings.html').includes('data-action="backup"')&&!read('settings.h
 assert(fs.existsSync(path.join(root,'browser-smoke.sh')),'browser smoke test is required');
 assert(fs.existsSync(path.join(root,'compressor-index.js')),'compressor index is required');
 assert(fs.readdirSync(root).filter(n=>/^brand-\d+\.js$/.test(n)).length>=50,'split compressor brand files are required');
+for(const name of htmlFiles){
+  const s=read(name);
+  if(!s.includes('<script src="app-lock.js"></script>')) continue;
+  assert(!s.includes('<script src="app-lock.js" defer>'),'app lock must remain synchronous before page interaction');
+  const external=[...s.matchAll(/<script\s+src="([^"]+)"([^>]*)><\/script>/g)];
+  for(const m of external){
+    if(m[1]==='app-lock.js') continue;
+    assert(/\bdefer\b/.test(m[2]),`${name}: external script ${m[1]} should use defer`);
+  }
+}
 const sw=read('service-worker.js');
+assert(!/"\.\/brand-\d+\.js"/.test(sw.split('self.addEventListener("install"')[0]),'large compressor brand chunks must stay lazy and not be part of the initial cache install');
 const cached=new Set((sw.match(/["']\.\/([\w.\-]+\.(?:html|js|css))["']/g)||[]).map(s=>s.slice(3,-1)));
 const referenced=new Set();
 for(const name of htmlFiles){

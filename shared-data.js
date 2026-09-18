@@ -51,6 +51,25 @@
   };
 
   let storageErrorSeq = 0;
+  // كاش للقراءات المتكررة داخل نفس عملية الرندر. الكاش يحتفظ بالنص الخام
+  // أيضًا؛ لذلك أي تغيير خارجي في localStorage يُكتشف تلقائيًا، وأي كتابة
+  // من خلال الطبقة هنا تُبطل القيمة القديمة قبل عودتها لأي شاشة.
+  const readCache = new Map();
+  function invalidateReadCache(keys) {
+    if (!keys) { readCache.clear(); return; }
+    for (const k of (Array.isArray(keys) ? keys : [keys])) readCache.delete(k);
+  }
+  function readCached(k, f = []) {
+    let raw = null;
+    try { raw = localStorage.getItem(k); } catch { return f; }
+    const hit = readCache.get(k);
+    if (hit && hit.raw === raw) return hit.value;
+    try {
+      const value = raw === null ? f : (JSON.parse(raw) ?? f);
+      readCache.set(k, { raw, value });
+      return value;
+    } catch { return f; }
+  }
   function get(k, f = []) {
     try { let x = JSON.parse(localStorage.getItem(k)); return x ?? f; }
     catch { return f; }
@@ -58,6 +77,7 @@
   function put(k, v) {
     try {
       localStorage.setItem(k, JSON.stringify(v));
+      invalidateReadCache(k);
       return true;
     } catch (e) {
       // مساحة التخزين المخصصة للمتصفح امتلأت (أو خاصية التخزين متعطّلة، زي
@@ -75,6 +95,7 @@
       for (const [k, v] of entries) JSON.stringify(v);
       for (const [k] of entries) previous[k] = localStorage.getItem(k);
       for (const [k, v] of entries) localStorage.setItem(k, JSON.stringify(v));
+      invalidateReadCache(entries.map(([k]) => k));
       return true;
     } catch (e) {
       for (const [k, raw] of Object.entries(previous)) {
@@ -90,8 +111,25 @@
     for (const [k, v] of Object.entries(values || {})) {
       try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {}
     }
+    invalidateReadCache(Object.keys(values || {}));
   }
   function arr(k) { return get(k, []); }
+  function arrCached(k) { return readCached(k, []); }
+  function debounce(fn, wait = 120) {
+    let timer = null;
+    function wrapped(...args) {
+      if (timer !== null) clearTimeout(timer);
+      timer = setTimeout(() => { timer = null; fn.apply(this, args); }, wait);
+    }
+    wrapped.cancel = () => { if (timer !== null) clearTimeout(timer); timer = null; };
+    return wrapped;
+  }
+  if (window && typeof window.addEventListener === "function") {
+    window.addEventListener("storage", function (event) {
+      if (!event || !event.key) return;
+      invalidateReadCache(event.key);
+    });
+  }
   function esc(v) {
     return String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c]));
   }
@@ -261,7 +299,7 @@
   }
 
   window.WorkshopData = {
-    K, get, put, commitStorage, arr, esc, escAttr, id, settings, duplicateCustomerByPhone,
+    K, get, put, commitStorage, arr, arrCached, debounce, esc, escAttr, id, settings, duplicateCustomerByPhone,
     customerName, deviceName, addresses, addressText, defineOverride, refreshAllScreens,
     getSchemaVersion, setSchemaVersion, CURRENT_SCHEMA_VERSION, withRollback
   };
@@ -273,6 +311,13 @@
   window.put = put;
   window.commitStorage = commitStorage;
   window.arr = arr;
+  window.arrCached = arrCached;
+  window.debounce = debounce;
+  // بعض الشاشات (استرجاع/حذف كل البيانات في app-data-management.js) بتكتب
+  // في localStorage مباشرة برا put/commitStorage (عشان بترجع القيم الخام
+  // الأصلية بالظبط وقت الفشل)، فلازم تقدر تُبطل الكاش يدويًا بعدها عشان أي
+  // قراءة عبر arrCached بعد كده تجيب القيمة الصح مش نسخة قديمة من الكاش.
+  window.invalidateReadCache = invalidateReadCache;
   window.esc = esc;
   window.escAttr = escAttr;
   window.id = id;
