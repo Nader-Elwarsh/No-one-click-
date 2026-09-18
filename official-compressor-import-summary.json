@@ -1,0 +1,46 @@
+{
+  "version": "v11-95-official-five",
+  "summary": [
+    {
+      "brand": "BITZER",
+      "report_records": 178,
+      "added": 0,
+      "filled": 0,
+      "total": 178,
+      "file": "compressor-brands/brand-057.js"
+    },
+    {
+      "brand": "EMERSON-COPELAND",
+      "report_records": 127,
+      "added": 0,
+      "filled": 0,
+      "total": 268,
+      "file": "compressor-brands/brand-035.js"
+    },
+    {
+      "brand": "دانفوس - سيكوب",
+      "report_records": 15,
+      "added": 1,
+      "filled": 0,
+      "total": 373,
+      "file": "compressor-brands/brand-002.js"
+    },
+    {
+      "brand": "تيكومسيه 1",
+      "report_records": 96,
+      "added": 0,
+      "filled": 0,
+      "total": 762,
+      "file": "compressor-brands/brand-009.js"
+    },
+    {
+      "brand": "باناسونيك",
+      "report_records": 792,
+      "added": 785,
+      "filled": 0,
+      "total": 1008,
+      "file": "compressor-brands/brand-001.js"
+    }
+  ],
+  "backup": "/tmp/workshop-fanya-samsung-updated-before-official-five"
+}

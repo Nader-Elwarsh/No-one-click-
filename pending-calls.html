@@ -1,0 +1,36 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><script>try{var t=localStorage.getItem("wf_theme");var d=t==="dark"||(t!=="light"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script><meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#001b4d"><link rel="manifest" href="manifest.json?v=11.95"><link rel="icon" type="image/png" sizes="192x192" href="icon-192-v11-47.png"><link rel="apple-touch-icon" href="icon-192-v11-47.png"><title>📞 مكالمات معلّقة</title><link rel="stylesheet" href="style.css"><script src="theme.js" defer></script><script src="event-delegation.js" defer></script></head><body><script src="app-lock.js"></script><main class="page">
+<div class="page-topbar"><a class="back" href="index.html">← الرئيسية</a><button class="theme-toggle-btn no-print" type="button" data-wf-click="toggleTheme" aria-label="تبديل المظهر" title="الوضع الداكن">🌙</button></div>
+<div class="page-head"><h1>📞 مكالمات لسه ماتعملهاش أمر شغل</h1></div>
+<div class="hint">المكالمات دي اتشاركت من تطبيق تسجيل المكالمات بس محدش كمّل عملها أمر شغل لسه. دوس "كمّل" على أي واحدة عشان تكمّلها، أو "تجاهل" لو مش محتاجها.</div>
+<div id="pendingCallsList"></div>
+</main><script src="notif-shared.js"></script><script src="share-store.js"></script><script src="shared-data.js"></script><script src="audit-log.js"></script><script src="image-store.js"></script><script src="migrations.js"></script>
+<script>
+function renderPendingCalls(){
+  let el=document.getElementById("pendingCallsList");
+  let list=arr(K.pc).slice().sort((a,b)=>(b.at||0)-(a.at||0));
+  if(!list.length){el.innerHTML='<div class="item">مفيش مكالمات معلّقة حاليًا 🎉</div>';return}
+  el.innerHTML=list.map(x=>{
+    let combined=[x.title,x.text,x.url].filter(Boolean).join(" — ");
+    let when=x.at?new Date(x.at).toLocaleString("ar-EG"):"";
+    return `<div class="item" data-pc-id="${esc(x.id)}">
+      <div class="kv"><b>${x.phone?`<a class="tel-link" href="tel:${esc(x.phone)}" target="_blank" rel="noopener">📞 ${esc(x.phone)}</a>`:"📞 مكالمة"}</b><small>${esc(when)}</small></div>
+      ${combined?`<div class="hint">${esc(combined)}</div>`:""}
+      ${x.fileName?`<div class="hint">🎙️ ${esc(x.fileName)}</div>`:""}
+      <div class="actions">
+        <a class="primary mini-action" href="share-target.html?resume=${encodeURIComponent(x.id)}">📋 كمّل</a>
+        <button type="button" class="secondary mini-action" data-wf-click="dismissPendingCall" data-wf-args='["${escAttr(x.id)}"]'>🗑️ تجاهل</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+async function dismissPendingCall(callId){
+  if(!confirm("متأكد إنك عايز تتجاهل المكالمة دي؟ لو فيها تسجيل صوتي هيتمسح.")) return;
+  let list=arr(K.pc);
+  let entry=list.find(x=>x.id===callId);
+  if(entry&&entry.audioRef&&window.ImageStore){try{await window.ImageStore.delete(entry.audioRef)}catch(e){}}
+  put(K.pc, list.filter(x=>x.id!==callId));
+  renderPendingCalls();
+}
+document.addEventListener("DOMContentLoaded", async ()=>{ if(typeof runMigrations==="function") await runMigrations(); renderPendingCalls(); });
+</script>
+</body></html>

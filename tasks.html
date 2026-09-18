@@ -1,0 +1,27 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><script>try{var t=localStorage.getItem("wf_theme");var d=t==="dark"||(t!=="light"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script><meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#001b4d"><meta name="description" content="مهام ومتابعة الورشة الفنية"><link rel="manifest" href="manifest.json?v=11.95"><link rel="icon" type="image/png" sizes="192x192" href="icon-192-v11-47.png"><link rel="apple-touch-icon" href="icon-192-v11-47.png"><title>المهام والمتابعة | الورشة الفنية</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="print-share.css"><script src="theme.js" defer></script><script src="event-delegation.js" defer></script></head><body><script src="app-lock.js"></script><main class="page">
+<div class="page-topbar"><a class="back" href="index.html">← الرئيسية</a><button class="theme-toggle-btn no-print" type="button" data-wf-click="toggleTheme" aria-label="تبديل المظهر" title="الوضع الداكن">🌙</button></div>
+<div class="page-head"><div><h1>📋 المهام والمتابعة</h1><p class="hint">قسم مستقل للمتابعات اليومية، ولا يؤثر على حسابات العملاء أو الأوامر أو الخزنة.</p></div></div>
+<section class="panel">
+<h2>➕ مهمة جديدة</h2>
+<div class="form-grid">
+<label>عنوان المهمة<input id="taskTitle" placeholder="مثال: تابع عميل، اطلب قطعة، راجع أمر..."></label>
+<label>التاريخ<input id="taskDate" type="date"></label>
+<label>الوقت<input id="taskTime" type="time"></label>
+
+<label>العميل (اختياري)<select id="taskCustomer"><option value="">بدون ربط بعميل</option></select></label>
+<label>أمر الشغل (اختياري)<select id="taskRequest"><option value="">بدون ربط بأمر شغل</option></select></label>
+<label class="wide">التفاصيل<input id="taskNote" placeholder="أي تفاصيل أو ملاحظات للمتابعة"></label>
+</div>
+<div class="actions"><button type="button" class="primary" data-wf-click="saveTask">💾 حفظ المهمة</button><button type="button" class="secondary" data-wf-click="clearTaskForm">↩️ تفريغ</button></div>
+</section>
+<section class="panel ps-context-target" data-ps-title="ملخص المهام">
+<div class="dash-head"><h2>📊 المتابعة</h2><span class="ps-inline-actions no-print" aria-label="إجراءات الطباعة والمشاركة"><button type="button" class="ps-icon-btn" title="طباعة" aria-label="طباعة" data-wf-event="click" data-wf-code="printWorkshopTarget(this)">🖨️</button><button type="button" class="ps-icon-btn" title="مشاركة" aria-label="مشاركة" data-wf-event="click" data-wf-code="shareWorkshopTarget(this)">↗️</button></span><span class="hint">يمكنك إغلاق المهمة ثم إعادة فتحها في أي وقت</span></div>
+<div id="taskStats"></div>
+<div class="form-grid">
+<label class="wide">🔍 بحث<input id="taskSearch" placeholder="ابحث في عنوان المهمة أو التفاصيل أو اسم العميل"></label>
+<label>عرض<select id="taskFilter"><option value="open">المفتوحة</option><option value="today">مهام اليوم</option><option value="overdue">المتأخرة</option><option value="done">المكتملة</option><option value="all">الكل</option></select></label>
+</div>
+<div id="taskList"></div>
+</section>
+</main><script src="notif-shared.js"></script>
+  <script src="shared-data.js"></script><script src="audit-log.js"></script><script src="global-search.js"></script><script src="bottom-nav.js"></script><script src="image-store.js"></script><script src="migrations.js"></script><script src="treasury.js"></script><script src="wallets.js"></script><script src="tasks.js"></script><script src="app-shared.js"></script><script src="app-dashboard-reports.js"></script><script src="app-customers.js"></script><script src="app-devices.js"></script><script src="app-requests.js"></script><script src="app-settings-lists.js"></script><script src="app-parts.js"></script><script src="app-fault-codes.js"></script><script src="app-compressor-codes.js"></script><script src="app-settings.js"></script><script src="app-delete-tools.js"></script><script src="app-route-followup.js"></script><script src="app-data-management.js"></script><script src="app-quick-add.js"></script><script src="app-notifications-bootstrap.js"></script><script src="print-share.js"></script></body></html>
