@@ -15,6 +15,20 @@
     if (cur.trim()) out.push(cur.trim());
     return out;
   }
+  function splitStatements(raw) {
+    var out = [], cur = "", quote = "", depth = 0;
+    for (var i = 0; i < raw.length; i++) {
+      var ch = raw[i];
+      if (quote) { cur += ch; if (ch === quote && raw[i - 1] !== "\\") quote = ""; continue; }
+      if (ch === "'" || ch === '"' || ch === "`") { quote = ch; cur += ch; continue; }
+      if (ch === "(" || ch === "[" || ch === "{") depth++;
+      if (ch === ")" || ch === "]" || ch === "}") depth--;
+      if (ch === ";" && depth === 0) { if (cur.trim()) out.push(cur.trim()); cur = ""; }
+      else cur += ch;
+    }
+    if (cur.trim()) out.push(cur.trim());
+    return out;
+  }
   function literal(raw, el, event) {
     var s = raw.trim();
     if ((s[0] === "'" && s[s.length - 1] === "'") || (s[0] === '"' && s[s.length - 1] === '"')) return s.slice(1, -1).replace(/\\(['"])/g, "$1");
@@ -31,17 +45,25 @@
     return undefined;
   }
   function callCode(code, el, event) {
-    var text = (code || "").trim();
-    var remove = text.match(/^this\.closest\((['"])(.*?)\1\)\.remove\(\)$/);
-    if (remove) { var target = el.closest(remove[2]); if (target) target.remove(); return true; }
-    var m = text.match(/^([A-Za-z_$][\w$]*)\s*\((.*)\)$/s);
-    if (!m) return false;
-    var fn = window[m[1]];
-    if (typeof fn !== "function") return false;
-    var rawArgs = m[2].trim() ? splitArgs(m[2]) : [];
-    var args = rawArgs.map(function (x) { return literal(x, el, event); });
-    if (args.some(function (x, i) { return x === undefined && !/^undefined$/.test(rawArgs[i]); })) return false;
-    fn.apply(el, args);
+    var statements = splitStatements((code || "").trim());
+    if (!statements.length) return false;
+    for (var s = 0; s < statements.length; s++) {
+      var text = statements[s];
+      if (text === "event.stopPropagation()") { event.stopPropagation(); continue; }
+      if (text === "event.preventDefault()") { event.preventDefault(); continue; }
+      var remove = text.match(/^this\.closest\((["'])(.*?)\1\)\.remove\(\)$/);
+      if (remove) { var target = el.closest(remove[2]); if (target) target.remove(); continue; }
+      var navigate = text.match(/^(?:window\.)?location\.href\s*=\s*(["'])(.*?)\1$/);
+      if (navigate) { window.location.href = navigate[2]; continue; }
+      var m = text.match(/^([A-Za-z_$][\w$]*)\s*\((.*)\)$/s);
+      if (!m) return false;
+      var fn = window[m[1]];
+      if (typeof fn !== "function") return false;
+      var rawArgs = m[2].trim() ? splitArgs(m[2]) : [];
+      var args = rawArgs.map(function (x) { return literal(x, el, event); });
+      if (args.some(function (x, i) { return x === undefined && !/^undefined$/.test(rawArgs[i]); })) return false;
+      fn.apply(el, args);
+    }
     return true;
   }
   function callSimple(name, argsAttr, el, event) {
