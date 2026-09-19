@@ -15,7 +15,12 @@ assert.strictEqual(context.monthKeyLocal(d),expectedMonth,'local month key');
 assert.strictEqual(context.dayKeyLocal('2026-09-15'),'2026-09-15','date-only strings stay on their local calendar day');
 assert.strictEqual(context.monthKeyLocal('2026-09-15'),'2026-09','date-only month key is local');
 const valid={};Object.values(window.K).forEach(k=>{valid[k]=k===window.K.s?null:[]});valid.images={};valid._meta={schemaVersion:1};assert.strictEqual(context.validateBackupData(valid).schemaVersion,1);
-const invalid={...valid};delete invalid[window.K.d];assert.throws(()=>context.validateBackupData(invalid),'missing backup section');
+// نسخة احتياطية قديمة اتعملت قبل ما يضاف مفتاح تخزين جديد (زي سلة المهملات
+// لاحقًا) من حقها الطبيعي إنها متحتويش عليه — ده مش عطل ولازم النسخة تتقبل
+// عادي (خلاف الماضي، لما أي مفتاح ناقص كان بيرفض النسخة بالكامل ويمنع
+// استرجاع نسخ حقيقية وسليمة بس أقدم من آخر تحديث).
+const missingNewerKey={...valid};delete missingNewerKey[window.K.d];assert.strictEqual(context.validateBackupData(missingNewerKey).schemaVersion,1,'backup missing a newer storage key is still accepted');
+const notABackupAtAll={...valid};delete notABackupAtAll[window.K.c];assert.throws(()=>context.validateBackupData(notABackupAtAll),'a file missing even the core customers key is rejected as not a real backup');
 const malformed={...valid,[window.K.p]:[3]};assert.throws(()=>context.validateBackupData(malformed),'invalid backup record');
 const future={...valid,_meta:{schemaVersion:999}};assert.throws(()=>context.validateBackupData(future),'future backup schema');
 store[window.K.c]=JSON.stringify([{id:'before'}]);store.wf_notif_enabled='true';store.wf_schema_version='6';

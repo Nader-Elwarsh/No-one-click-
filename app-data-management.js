@@ -54,8 +54,20 @@ async function decryptBackupData(envelope,password){const dec=new TextDecoder(),
 function backupSummary(data){const n=k=>Array.isArray(data[k])?data[k].length:0;return `المخطط: ${data._meta?.schemaVersion||1} — العملاء: ${n(K.c)} — الأجهزة: ${n(K.d)} — أوامر الشغل: ${n(K.r)} — قطع المخزن: ${n(K.p)} — حركات المخزن: ${n(K.m)} — حركات الحسابات: ${n(K.wtx)} — حركات الخزنة: ${n(K.tr)} — الصور/التسجيلات: ${data.images&&typeof data.images==="object"?Object.keys(data.images).length:0}`}
 function validateBackupData(data){
   if(!data||typeof data!=="object"||Array.isArray(data))throw new Error("bad");
-  const keys=Object.values(K),missing=keys.filter(k=>!(k in data));if(missing.length)throw new Error(`missing-${missing.join(",")}`);
-  for(const k of keys){const v=data[k],isSettings=k===K.s;if(isSettings?(v!==null&&(typeof v!=="object"||Array.isArray(v))):!Array.isArray(v))throw new Error(`invalid-${k}`);if(Array.isArray(v)&&v.some(x=>!x||typeof x!=="object"||Array.isArray(x)))throw new Error(`invalid-record-${k}`)}
+  // متطلب مرن: النسخة لازم تكون فيها على الأقل مفتاح أساسي واحد قديم (زي
+  // العملاء) عشان نتأكد إنها نسخة احتياطية حقيقية من النظام مش JSON عشوائي.
+  // من غير ما نطلب وجود كل مفتاح موجود في النسخة الحالية من التطبيق —
+  // النظام بيضيف مفاتيح تخزين جديدة بمرور الوقت (زي سلة المهملات)، فنسخة
+  // احتياطية قديمة أُخذت قبل إضافة مفتاح جديد من حقها الطبيعي إنها ما
+  // تحتويش عليه، وده مش عطل في النسخة ولا سبب لرفضها بالكامل.
+  if(!(K.c in data))throw new Error("missing-core-keys");
+  const keys=Object.values(K);
+  for(const k of keys){
+    if(!(k in data))continue; // غير موجود = نسخة أقدم من إضافة المفتاح ده، طبيعي
+    const v=data[k],isSettings=k===K.s;
+    if(isSettings?(v!==null&&(typeof v!=="object"||Array.isArray(v))):!Array.isArray(v))throw new Error(`invalid-${k}`);
+    if(Array.isArray(v)&&v.some(x=>!x||typeof x!=="object"||Array.isArray(x)))throw new Error(`invalid-record-${k}`)
+  }
   if(data.images!==undefined&&(data.images===null||typeof data.images!=="object"||Array.isArray(data.images)))throw new Error("invalid-images");
   if(data.images&&Object.values(data.images).some(x=>typeof x!=="string"))throw new Error("invalid-image-value");
   if(data._meta!==undefined&&(data._meta===null||typeof data._meta!=="object"||Array.isArray(data._meta)))throw new Error("invalid-meta");
