@@ -35,10 +35,15 @@ function deleteRequestRecord(rid){
     if(!confirm(`⚠️ أمر الشغل ${r.no||""} مغلق أو مدفوع بالكامل. حذفه هيشيله نهائيًا هو وأي حركة حسابات أو مخزون مرتبطة بيه من التقارير. متأكد إنك عايز تحذفه؟`))return;
   }
   if(!confirm(`حذف أمر الشغل ${r.no||""} نهائيًا؟`))return;
-  const stock=arr(K.p),requests=arr(K.r);restorePartsIntoStock(stock,[r]);
+  const stock=arr(K.p),requests=arr(K.r);
+  const partsDelta=(r.parts||[]).filter(x=>!x.external&&x.partId).map(x=>({partId:x.partId,qty:+x.qty||0}));
+  restorePartsIntoStock(stock,[r]);
+  const removedMoves=arr(K.m).filter(x=>x.requestId===rid);
   const ok=commitStorage({[K.p]:stock,[K.m]:arr(K.m).filter(x=>x.requestId!==rid),[K.r]:requests.filter(x=>x.id!==rid),[K.wtx]:walletEntriesAfterRemovingRequests([rid])});
   if(!ok)return;
-  cleanupRequestRecordings([r]);window.auditLog?.("حذف", "أمر شغل", rid, r.no||"");renderRequests();
+  cleanupRequestRecordings([r]);window.auditLog?.("حذف", "أمر شغل", rid, r.no||"");
+  pushToTrash("request",`أمر شغل ${r.no||""}`,{request:r,moves:removedMoves,partsDelta,walletRefKeys:walletRefKeysForOrders([rid])});
+  renderRequests();
   if(document.getElementById("requestProfile"))location.href="requests.html";
 }
 function deleteAllCustomers(){

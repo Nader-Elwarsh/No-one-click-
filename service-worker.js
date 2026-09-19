@@ -51,6 +51,7 @@ const CORE_FILES = [
   "./app-settings.js",
   "./settings-events.js",
   "./app-delete-tools.js",
+  "./app-trash.js",
   "./app-lock.js",
   "./event-delegation.js",
   "./app-invoices.js",

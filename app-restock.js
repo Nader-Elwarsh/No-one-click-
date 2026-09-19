@@ -30,7 +30,7 @@ function _ensureQuickAddPartBox(anchorEl) {
       <h3>➕ إضافة قطعة جديدة للمخزن</h3>
       <div class="form-grid">
         <label class="wide">اسم القطعة<input id="qapName"></label>
-        <label>التصنيف<div class="part-autocomplete"><input type="text" id="qapCategorySearch" class="part-autocomplete-input" placeholder="🔍 اكتب اسم التصنيف..." autocomplete="off" data-wf-event="input" data-wf-code="filterListOptions('qapCategory', this.value)" data-wf-event="focus" data-wf-code="filterListOptions('qapCategory', this.value)" data-wf-event="blur" data-wf-code="hideListResults('qapCategory')"><input type="hidden" id="qapCategory"><div id="qapCategoryResults" class="part-autocomplete-results hidden"></div></div></label>
+        <label>التصنيف<div class="part-autocomplete"><input type="text" id="qapCategorySearch" class="part-autocomplete-input" placeholder="🔍 اكتب اسم التصنيف..." autocomplete="off" data-wf-event="input" data-wf-code="filterListOptions('qapCategory', this.value)" data-wf-refocus-code="filterListOptions('qapCategory', this.value)" data-wf-blur="hideListResults" data-wf-args='["qapCategory"]'><input type="hidden" id="qapCategory"><div id="qapCategoryResults" class="part-autocomplete-results hidden"></div></div></label>
         <label>الكود <small>اختياري</small><input id="qapCode"></label>
         <label>الكمية الأولى<input id="qapQty" type="number" min="0" value="1"></label>
         <label>سعر الشراء<input id="qapBuy" type="number" min="0" step=".01" value="0"></label>

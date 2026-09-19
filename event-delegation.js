@@ -93,6 +93,16 @@
         var refocusEl = event.target.closest && event.target.closest("[data-wf-refocus-code]");
         if (refocusEl) callCode(refocusEl.getAttribute("data-wf-refocus-code"), refocusEl, event);
       }
+      // نفس الفكرة لكن لحدث change: عنصر واحد كان محتاج يستجيب لكل من click
+      // (لوقف انتشار الحدث لعنصر أب بيفتح صفحة تانية عند أي ضغط جواه) وchange
+      // (لتنفيذ التغيير الفعلي) بنفس اسمي الخاصيتين data-wf-event/data-wf-code
+      // — فكانت أول قيمة (click) هي اللي بتفضل بعد إزالة HTML للتكرار،
+      // وchange كان بيضيع تمامًا (زي قايمة تغيير حالة أمر الشغل من غير ما
+      // تحفظ التغيير فعليًا). data-wf-change-code اسم بديل فريد للحالة دي.
+      if (type === "change") {
+        var changeEl = event.target.closest && event.target.closest("[data-wf-change-code]");
+        if (changeEl) callCode(changeEl.getAttribute("data-wf-change-code"), changeEl, event);
+      }
     }, type === "focus" || type === "blur");
   });
 })();

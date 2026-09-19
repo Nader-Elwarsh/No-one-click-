@@ -13,16 +13,13 @@
   function requestRows() { return arr(K.r); }
   function stockRows() { return arr(K.p); }
   function moveRows() { return arr(K.m); }
-  function save(key, value) { put(key, value); }
-  function restorePartsForRequests(requests) {
-    const stock = stockRows();
+  function restorePartsForRequestsInto(stock, requests) {
     (requests || []).forEach(function (r) {
       (r.parts || []).forEach(function (part) {
         const p = stock.find(function (x) { return x.id === part.partId; });
         if (p) p.qty = (+p.qty || 0) + (+part.qty || 0);
       });
     });
-    save("wf_p", stock);
   }
 
   // صور الأجهزة متخزنة في IndexedDB (image-store.js) مش جوه سجل الجهاز
@@ -124,11 +121,12 @@
       : "—";
 
     el.innerHTML = `
-      <div class="profile">
+      <div class="profile ps-context-target" data-ps-title="كشف حساب العميل ${esc(c.name)}">
         <div class="page-head">
           <h1 class="profile-title">👤 ${esc(c.name)}</h1>
           <div class="compact-actions">
             <button class="secondary" data-wf-event="click" data-wf-code="editCustomer('${c.id}')">✏️ تعديل</button>
+            ${typeof psActions==="function"?psActions("كشف حساب العميل "+(c.name||"")):""}
             <a class="primary" href="devices.html?customer=${c.id}">➕ جهاز</a>
             <a class="primary" href="requests.html?customer=${c.id}">➕ أمر شغل</a>
           </div>
@@ -146,6 +144,39 @@
           <div class="report-card"><span>🧾 المتبقي عليه حاليًا</span><b>${totalRemaining.toFixed(2)} ج</b></div>
           <div class="report-card"><span>🔧 أكتر قطعة اتصرفت معاه</span><b>${topPartLabel}</b></div>
         </div>
+        ${rs.length ? `
+        <h2>🧾 كشف حساب تفصيلي</h2>
+        <div class="statement-table-wrap" style="overflow-x:auto">
+          <table class="statement-table" style="width:100%;border-collapse:collapse">
+            <thead><tr>
+              <th style="text-align:right">التاريخ</th><th style="text-align:right">رقم الأمر</th>
+              <th style="text-align:right">الحالة</th><th style="text-align:right">الإجمالي</th>
+              <th style="text-align:right">المدفوع</th><th style="text-align:right">المتبقي</th>
+            </tr></thead>
+            <tbody>
+              ${rs.slice().sort(function (a, b) { return (a.createdAt || "").localeCompare(b.createdAt || ""); }).map(function (r) {
+                const total = +r.total || 0;
+                const paid = (r.closed || r.paid) ? total : Math.min(+r.deposit || 0, total);
+                const remaining = (r.closed || r.paid) ? 0 : Math.max(0, total - (+r.deposit || 0));
+                const dateLabel = r.createdAt ? new Date(r.createdAt).toLocaleDateString("ar-EG") : "—";
+                return `<tr>
+                  <td>${esc(dateLabel)}</td>
+                  <td><a href="request.html?id=${r.id}">${esc(r.no || "—")}</a></td>
+                  <td>${esc(r.status || "—")}${r.closed ? " 🔒" : ""}</td>
+                  <td>${total.toFixed(2)} ج</td>
+                  <td>${paid.toFixed(2)} ج</td>
+                  <td>${remaining.toFixed(2)} ج</td>
+                </tr>`;
+              }).join("")}
+            </tbody>
+            <tfoot><tr style="font-weight:bold">
+              <td colspan="3">الإجمالي</td>
+              <td>${totalOrdersValue.toFixed(2)} ج</td>
+              <td>${totalPaid.toFixed(2)} ج</td>
+              <td>${totalRemaining.toFixed(2)} ج</td>
+            </tr></tfoot>
+          </table>
+        </div>` : ""}
       </div>
 
       <h2>🔧 الأجهزة</h2>
@@ -208,14 +239,37 @@
 
     if (!confirm(message)) return;
 
-    restorePartsForRequests(orders);
-    deleteDevicePhotos(devices);
+    // بُني الحذف ده أصلًا بخمس كتابات منفصلة لـlocalStorage (قطع، حركات
+    // مخزن، أوامر، أجهزة، عملاء) من غير أي حماية لو فشلت وحدة منهم في
+    // النص، ومن غير ما يمسح حركات المحفظة المرتبطة بالأوامر المحذوفة (تفضل
+    // "دخل" ظاهر في المحفظة لأمر شغل بقى غير موجود أصلًا) ولا تسجيلات
+    // المكالمات المرتبطة بيها (تفضل يتيمة في IndexedDB للأبد). اتصلحوا
+    // التلاتة هنا: كتابة واحدة ذرية (commitStorage) + تنضيف حركات المحفظة
+    // + تنضيف التسجيلات، بنفس المنطق المستخدم بالظبط في حذف أمر شغل واحد
+    // (app-delete-tools.js).
+    const orderIds = orders.map(function (r) { return r.id; });
+    const stock = stockRows();
+    const partsDelta = orders.flatMap(function (r) {
+      return (r.parts || []).filter(function (x) { return !x.external && x.partId; }).map(function (x) { return { partId: x.partId, qty: +x.qty || 0 }; });
+    });
+    const removedMoves = moveRows().filter(function (m) { return orderIds.indexOf(m.requestId) !== -1; });
+    restorePartsForRequestsInto(stock, orders);
+    const values = {};
+    values[window.K.p] = stock;
+    values[window.K.m] = moveRows().filter(function (m) { return orderIds.indexOf(m.requestId) === -1; });
+    values[window.K.r] = requestRows().filter(function (r) { return orderIds.indexOf(r.id) === -1; });
+    values[window.K.d] = deviceRows().filter(function (d) { return d.customerId !== cid; });
+    values[window.K.c] = customerRows().filter(function (x) { return x.id !== cid; });
+    values[window.K.wtx] = typeof walletEntriesAfterRemovingRequests === "function" ? walletEntriesAfterRemovingRequests(orderIds) : arr(window.K.wtx);
+    if (!window.commitStorage(values)) { alert("تعذر حذف العميل بالكامل؛ لم يتم تنفيذ أي تغيير."); return; }
 
-    const orderIds = new Set(orders.map(function (r) { return r.id; }));
-    save("wf_m", moveRows().filter(function (m) { return !orderIds.has(m.requestId); }));
-    save("wf_r", requestRows().filter(function (r) { return !orderIds.has(r.id); }));
-    save("wf_d", deviceRows().filter(function (d) { return d.customerId !== cid; }));
-    save("wf_c", customerRows().filter(function (x) { return x.id !== cid; }));
+    deleteDevicePhotos(devices);
+    if (typeof cleanupRequestRecordings === "function") cleanupRequestRecordings(orders);
+    window.auditLog?.("حذف", "عميل", cid, `${c.name || ""} (${devices.length} جهاز، ${orders.length} أمر شغل)`);
+    if (typeof pushToTrash === "function") pushToTrash("customer", `العميل ${c.name || ""}`, {
+      customer: c, devices: devices, requests: orders, moves: removedMoves, partsDelta: partsDelta,
+      walletRefKeys: typeof walletRefKeysForOrders === "function" ? walletRefKeysForOrders(orderIds) : []
+    });
 
     refreshAllScreens();
 
@@ -237,13 +291,28 @@
 
     if (!confirm(message)) return;
 
-    restorePartsForRequests(orders);
-    deleteDevicePhotos([d]);
+    const orderIds = orders.map(function (r) { return r.id; });
+    const stock = stockRows();
+    const partsDelta = orders.flatMap(function (r) {
+      return (r.parts || []).filter(function (x) { return !x.external && x.partId; }).map(function (x) { return { partId: x.partId, qty: +x.qty || 0 }; });
+    });
+    const removedMoves = moveRows().filter(function (m) { return orderIds.indexOf(m.requestId) !== -1; });
+    restorePartsForRequestsInto(stock, orders);
+    const values = {};
+    values[window.K.p] = stock;
+    values[window.K.m] = moveRows().filter(function (m) { return orderIds.indexOf(m.requestId) === -1; });
+    values[window.K.r] = requestRows().filter(function (r) { return r.deviceId !== did; });
+    values[window.K.d] = deviceRows().filter(function (x) { return x.id !== did; });
+    values[window.K.wtx] = typeof walletEntriesAfterRemovingRequests === "function" ? walletEntriesAfterRemovingRequests(orderIds) : arr(window.K.wtx);
+    if (!window.commitStorage(values)) { alert("تعذر حذف الجهاز بالكامل؛ لم يتم تنفيذ أي تغيير."); return; }
 
-    const orderIds = new Set(orders.map(function (r) { return r.id; }));
-    save("wf_m", moveRows().filter(function (m) { return !orderIds.has(m.requestId); }));
-    save("wf_r", requestRows().filter(function (r) { return r.deviceId !== did; }));
-    save("wf_d", deviceRows().filter(function (x) { return x.id !== did; }));
+    deleteDevicePhotos([d]);
+    if (typeof cleanupRequestRecordings === "function") cleanupRequestRecordings(orders);
+    window.auditLog?.("حذف", "جهاز", did, `${d.type || ""} — ${d.brand || ""} (${orders.length} أمر شغل)`);
+    if (typeof pushToTrash === "function") pushToTrash("device", `الجهاز ${d.type || ""} — ${d.brand || ""}`, {
+      device: d, requests: orders, moves: removedMoves, partsDelta: partsDelta,
+      walletRefKeys: typeof walletRefKeysForOrders === "function" ? walletRefKeysForOrders(orderIds) : []
+    });
 
     refreshAllScreens();
 

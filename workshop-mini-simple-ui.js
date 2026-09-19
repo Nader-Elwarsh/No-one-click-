@@ -876,7 +876,7 @@
             </div>
           </div>
           <div class="simple-record-side">
-            ${canEditStatus ? `<select class="simple-status-select" data-wf-event="click" data-wf-code="event.stopPropagation()" data-wf-event="change" data-wf-code="changeRequestStatus('${r.id}',this.value)">${nextStatusOptions(r.status).map(x=>`<option ${r.status===x?"selected":""}>${esc2(x)}</option>`).join("")}</select>` : `<span class="simple-status ${r.closed ? "closed" : ""}">${esc2(status)}</span>`}
+            ${canEditStatus ? `<select class="simple-status-select" data-wf-event="click" data-wf-code="event.stopPropagation()" data-wf-change-code="changeRequestStatus('${r.id}',this.value)">${nextStatusOptions(r.status).map(x=>`<option ${r.status===x?"selected":""}>${esc2(x)}</option>`).join("")}</select>` : `<span class="simple-status ${r.closed ? "closed" : ""}">${esc2(status)}</span>`}
             ${canReturnRequest(r) ? `<button type="button" class="secondary mini-action return-btn" data-wf-event="click" data-wf-code="markRequestReturned('${r.id}')">🔄 مرتجع${r.closed ? ` (${Math.max(0,returnWindowDaysLeft(r))}ي)` : ""}</button>` : ""}
             <b>${(+r.total||0).toFixed(2)} ج</b>
             ${(+r.deposit||0) > 0 ? `<small class="deposit-chip">💵 عربون ${(+r.deposit).toFixed(2)} ج</small>` : ""}
