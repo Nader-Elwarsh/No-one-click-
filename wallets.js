@@ -148,6 +148,12 @@ function deleteWalletTx(txId){
 --------------------------------------------------------------------- */
 function upsertWalletTxForRef(refKey,data){
   let a=arr(K.wtx),idx=a.findIndex(x=>x.refKey===refKey&&!x.deleted);
+  // لو المستخدم عدّل الحركة دي يدويًا من صفحة المحفظة (editWalletTx بيحط
+  // manualOverride:true)، معناها بقى بيديرها بنفسه — فمينفعش أي حفظ تاني
+  // للأمر المرتبط بيها (حتى لغرض تاني تمامًا زي إضافة قطعة) يدوس على تعديله
+  // ويرجّعها للمبلغ التلقائي القديم بصمت. قبل الإصلاح ده، manualOverride
+  // كان بيتسجّل بس من غير ما حد يتحقق منه في أي مكان.
+  if(idx>=0&&a[idx].manualOverride)return true;
   let amount=+data.amount||0,wallet=(data.wallet||"").trim();
   if(!wallet||amount<=0){
     if(idx>=0)return put(K.wtx,a.map((x,i)=>i===idx?{...x,deleted:true}:x));

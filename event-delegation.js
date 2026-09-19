@@ -68,9 +68,31 @@
   ["input", "focus", "blur", "change", "submit"].forEach(function (type) {
     document.addEventListener(type, function (event) {
       var el = event.target.closest && event.target.closest('[data-wf-event="' + type + '"]');
-      if (!el) return;
-      if (type === "submit") event.preventDefault();
-      callCode(el.getAttribute("data-wf-code"), el, event);
+      if (el) {
+        if (type === "submit") event.preventDefault();
+        callCode(el.getAttribute("data-wf-code"), el, event);
+        return;
+      }
+      // نفس اتفاقية data-wf-click (اسم دالة + data-wf-args JSON) لكن لحدث الـ
+      // input/blur هنا. كانت data-wf-blur وdata-wf-input برضو من غير أي معالج
+      // فعلي (نفس مشكلة data-wf-click بالظبط) — يعني قوايم نتائج البحث
+      // بالاسم/المركز/القرية... (autocomplete) ما كانتش بتتقفل تلقائيًا لما
+      // تسيب الحقل، وفلترة صنف الفاتورة/خط السير أثناء الكتابة ما كانتش بتحصل.
+      if (type === "blur" || type === "input") {
+        var attr = "data-wf-" + type;
+        var simpleEl = event.target.closest && event.target.closest("[" + attr + "]");
+        if (simpleEl) { callSimple(simpleEl.getAttribute(attr), simpleEl.getAttribute("data-wf-args"), simpleEl, event); return; }
+      }
+      // بعض حقول البحث كتبت data-wf-event="input" وdata-wf-event="focus" مرتين
+      // على نفس العنصر بنفس الكود (عشان الفلترة تظهر تاني لو رجعت تدوس على
+      // الحقل من غير ما تكتب) — لكن HTML بترفض تكرار نفس اسم الخاصية على نفس
+      // العنصر وبتاخد أول قيمة بس، فكانت data-wf-event="focus" الثانية دايمًا
+      // بتضيع بصمت. data-wf-refocus-code اسم بديل فريد بيحمل نفس الكود عشان
+      // حدث focus يلاقيه ويشتغل صح.
+      if (type === "focus") {
+        var refocusEl = event.target.closest && event.target.closest("[data-wf-refocus-code]");
+        if (refocusEl) callCode(refocusEl.getAttribute("data-wf-refocus-code"), refocusEl, event);
+      }
     }, type === "focus" || type === "blur");
   });
 })();
