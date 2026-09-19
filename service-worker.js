@@ -1,4 +1,4 @@
-const CACHE_NAME = "workshop-v11-112-final-performance";
+const CACHE_NAME = "workshop-v11-113-route-wiring-fixes";
 importScripts("./notif-shared.js");
 importScripts("./share-store.js");
 const CORE_FILES = [
