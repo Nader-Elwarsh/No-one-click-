@@ -240,12 +240,42 @@ function renameInlineListItem(key,i,v){
   v=(v||"").trim();let s=settings(),a=s[key]||[];if(i<0||i>=a.length)return;
   if(!v){settingsPage();return} // رجوع للاسم القديم لو مسحه فاضي بدل ما يحفظ قيمة فاضية
   let old=a[i];a[i]=v;s[key]=a;
-  if(key==="wallets"&&s.walletCaps&&old in s.walletCaps&&old!==v){s.walletCaps[v]=s.walletCaps[old];delete s.walletCaps[old]}
+  if(key==="wallets"&&old!==v){
+    if(s.walletCaps&&old in s.walletCaps){s.walletCaps[v]=s.walletCaps[old];delete s.walletCaps[old]}
+    if(s.defaultWallet===old)s.defaultWallet=v;
+    // لازم نرحّل كل حركة محفظة (wf_wallet_tx) وأي أمر شغل عليه عربون/تحصيل
+    // نهائي مسجّل باسم المحفظة القديم — من غير ده، الحركات القديمة بتفضل
+    // محفوظة باسم مش موجود في قايمة المحافظ، فبتختفي من إجمالي المحفظة
+    // (الاسم الجديد) وهي لسه موجودة فعليًا في البيانات؛ ده بالظبط سبب
+    // ظهور المبلغ في كشف/سجل عام بس عدم تغيّر "المجموع" الخاص بالمحفظة.
+    let wtx=arr(K.wtx),touchedWtx=false;
+    wtx.forEach(x=>{if(x.wallet===old){x.wallet=v;touchedWtx=true}});
+    let reqs=arr(K.r),touchedReq=false;
+    reqs.forEach(r=>{
+      if(r.depositWallet===old){r.depositWallet=v;touchedReq=true}
+      if(r.closeWallet===old){r.closeWallet=v;touchedReq=true}
+    });
+    let payload={[K.s]:s};
+    if(touchedWtx)payload[K.wtx]=wtx;
+    if(touchedReq)payload[K.r]=reqs;
+    if(!commitStorage(payload))return;
+    settingsPage();
+    return;
+  }
   put(K.s,s);settingsPage();
 }
 function deleteInlineListItem(key,i){
   let s=settings(),a=s[key]||[];if(i<0||i>=a.length)return;
-  let removed=a[i];a.splice(i,1);s[key]=a;
+  let removed=a[i];
+  // نفس مشكلة إعادة التسمية بالظبط: حذف محفظة من القايمة هنا بيشيلها من
+  // walletsOverview()/الإجمالي، لكن حركاتها القديمة (wf_wallet_tx) بتفضل
+  // موجودة في البيانات باسمها القديم من غير أي تنبيه — يعني رصيدها بيختفي
+  // بصمت من "إجمالي أرصدة كل الحسابات" رغم إن الفلوس دي لسه مسجّلة فعليًا.
+  if(key==="wallets"&&typeof walletRawBalance==="function"){
+    let raw=walletRawBalance(removed);
+    if(raw&&!confirm(`المحفظة "${removed}" لسه فيها حركات برصيد ${raw.toFixed(2)} ج. حذفها من القايمة هيشيلها من إجمالي المحافظ بالكامل، مع إن حركاتها القديمة هتفضل موجودة (تقدر تشوفها من كشف التصنيف لو محتاج). تأكيد الحذف؟`))return;
+  }
+  a.splice(i,1);s[key]=a;
   if(key==="wallets"&&s.walletCaps&&removed in s.walletCaps)delete s.walletCaps[removed];
   put(K.s,s);settingsPage();
 }
