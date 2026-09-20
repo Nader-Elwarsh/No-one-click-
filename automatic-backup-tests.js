@@ -27,5 +27,18 @@ const now = Date.now();
   localStorage.setItem('wf_auto_backup_last_check', '0');
   await context.runAutomaticBackupCheck();
   if (downloads !== 1) throw new Error('unchanged data created a duplicate backup');
+
+  // مرة واحدة بس: قيمة "no" القديمة (قبل إصلاح "لا الآن") لازم تتشال
+  // عشان يترجع يتسأل تاني، وبعدها القيمة الجديدة (سواء "no" أو "yes")
+  // مايتلمسش تاني ولا مرة.
+  localStorage.removeItem('wf_auto_backup_legacy_reset_done');
+  localStorage.setItem('wf_auto_backup_enabled', 'no');
+  context.migrateLegacyAutoBackupOptOut();
+  if (localStorage.getItem('wf_auto_backup_enabled') !== null) throw new Error('legacy "no" was not cleared on first migration');
+  if (localStorage.getItem('wf_auto_backup_legacy_reset_done') !== '1') throw new Error('legacy migration flag was not set');
+  localStorage.setItem('wf_auto_backup_enabled', 'no');
+  context.migrateLegacyAutoBackupOptOut();
+  if (localStorage.getItem('wf_auto_backup_enabled') !== 'no') throw new Error('migration ran more than once and touched a deliberate later choice');
+
   console.log('automatic-backup-tests: PASS');
 })().catch(err => { console.error(err); process.exit(1); });
