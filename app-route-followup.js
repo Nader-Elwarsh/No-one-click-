@@ -322,8 +322,12 @@ function confirmQuickPartialPayment(i){
   r.deposit=(+r.deposit||0)+newDeposit;
   if(wallet)r.depositWallet=wallet;
   r.remain=Math.max(0,r.total-r.deposit);
-  if(!saveJSONSafe(K.r,a))return;
-  if(typeof syncWalletForOrderDeposit==="function")syncWalletForOrderDeposit(r);
+  const saved=withRollback([K.r,K.wtx],()=>{
+    if(!put(K.r,a))return{ok:false};
+    if(typeof syncWalletForOrderDeposit==="function"&&!syncWalletForOrderDeposit(r))return{ok:false};
+    return{ok:true};
+  });
+  if(!saved?.ok){alert("تعذر حفظ الدفعة والحركة المالية معًا؛ لم يتم تسجيل الدفعة.");return}
   routeViewState.quickCloseId=null;
   routeViewState.quickCloseDraft=null;
   refreshRouteViews();
@@ -349,9 +353,13 @@ function confirmQuickClose(i){
   const now=new Date().toISOString();
   const collected=Math.max(0,(+r.total||0)-(+r.deposit||0));
   r.paid=true;r.remain=0;r.paidAt=now;r.closed=true;r.closedAt=now;r.closeWallet=wallet;
-  if(!saveJSONSafe(K.r,a))return;
-  if(typeof syncTreasuryForOrderClose==="function")syncTreasuryForOrderClose(r,collected);
-  if(typeof syncWalletForOrderClose==="function")syncWalletForOrderClose(r,collected,wallet);
+  const saved=withRollback([K.r,K.wtx],()=>{
+    if(!put(K.r,a))return{ok:false};
+    if(typeof syncTreasuryForOrderClose==="function")syncTreasuryForOrderClose(r,collected);
+    if(typeof syncWalletForOrderClose==="function"&&!syncWalletForOrderClose(r,collected,wallet))return{ok:false};
+    return{ok:true};
+  });
+  if(!saved?.ok){alert("تعذر حفظ الإغلاق والحركة المالية معًا؛ لم يتم إغلاق أمر الشغل.");return}
   routeViewState.quickCloseId=null;
   routeViewState.quickCloseDraft=null;
   if(typeof renderDash==="function")renderDash();

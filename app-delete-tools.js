@@ -41,7 +41,7 @@ function deleteRequestRecord(rid){
   const removedMoves=arr(K.m).filter(x=>x.requestId===rid);
   const ok=commitStorage({[K.p]:stock,[K.m]:arr(K.m).filter(x=>x.requestId!==rid),[K.r]:requests.filter(x=>x.id!==rid),[K.wtx]:walletEntriesAfterRemovingRequests([rid])});
   if(!ok)return;
-  cleanupRequestRecordings([r]);window.auditLog?.("حذف", "أمر شغل", rid, r.no||"");
+  window.auditLog?.("حذف", "أمر شغل", rid, r.no||"");
   pushToTrash("request",`أمر شغل ${r.no||""}`,{request:r,moves:removedMoves,partsDelta,walletRefKeys:walletRefKeysForOrders([rid])});
   renderRequests();
   if(document.getElementById("requestProfile"))location.href="requests.html";

@@ -263,8 +263,6 @@
     values[window.K.wtx] = typeof walletEntriesAfterRemovingRequests === "function" ? walletEntriesAfterRemovingRequests(orderIds) : arr(window.K.wtx);
     if (!window.commitStorage(values)) { alert("تعذر حذف العميل بالكامل؛ لم يتم تنفيذ أي تغيير."); return; }
 
-    deleteDevicePhotos(devices);
-    if (typeof cleanupRequestRecordings === "function") cleanupRequestRecordings(orders);
     window.auditLog?.("حذف", "عميل", cid, `${c.name || ""} (${devices.length} جهاز، ${orders.length} أمر شغل)`);
     if (typeof pushToTrash === "function") pushToTrash("customer", `العميل ${c.name || ""}`, {
       customer: c, devices: devices, requests: orders, moves: removedMoves, partsDelta: partsDelta,
@@ -306,8 +304,6 @@
     values[window.K.wtx] = typeof walletEntriesAfterRemovingRequests === "function" ? walletEntriesAfterRemovingRequests(orderIds) : arr(window.K.wtx);
     if (!window.commitStorage(values)) { alert("تعذر حذف الجهاز بالكامل؛ لم يتم تنفيذ أي تغيير."); return; }
 
-    deleteDevicePhotos([d]);
-    if (typeof cleanupRequestRecordings === "function") cleanupRequestRecordings(orders);
     window.auditLog?.("حذف", "جهاز", did, `${d.type || ""} — ${d.brand || ""} (${orders.length} أمر شغل)`);
     if (typeof pushToTrash === "function") pushToTrash("device", `الجهاز ${d.type || ""} — ${d.brand || ""}`, {
       device: d, requests: orders, moves: removedMoves, partsDelta: partsDelta,

@@ -60,9 +60,9 @@ function restoreFromTrash(trashId) {
 
   const refKeys = new Set(p.walletRefKeys || []);
   values[K.wtx] = arr(K.wtx).map(x => refKeys.has(String(x.refKey || "")) ? { ...x, deleted: false } : x);
+  values[K.trash] = arr(K.trash).filter(x => x.id !== trashId);
 
   if (!commitStorage(values)) { alert("تعذر الاسترجاع؛ لم يتم تنفيذ أي تغيير."); return; }
-  put(K.trash, arr(K.trash).filter(x => x.id !== trashId));
   window.auditLog?.("استرجاع", entry.type === "customer" ? "عميل" : entry.type === "device" ? "جهاز" : "أمر شغل", entry.id, entry.label);
   refreshAllScreens?.();
   renderTrash();
@@ -73,7 +73,17 @@ function permanentlyDeleteTrash(trashId) {
   const entry = arr(K.trash).find(x => x.id === trashId);
   if (!entry) return;
   if (!confirm(`حذف "${entry.label}" نهائيًا من سلة المهملات؟ بعدها مش هينفع يترجع خالص.`)) return;
-  put(K.trash, arr(K.trash).filter(x => x.id !== trashId));
+  if (!put(K.trash, arr(K.trash).filter(x => x.id !== trashId))) { alert("تعذر الحذف النهائي؛ لم يتم حذف السجل."); return; }
+  const payload = entry.payload || {};
+  if (entry.type === "request") cleanupRequestRecordings?.(payload.request ? [payload.request] : []);
+  if (entry.type === "device") {
+    cleanupDevicePhotos?.(payload.device ? [payload.device] : []);
+    cleanupRequestRecordings?.(payload.requests || []);
+  }
+  if (entry.type === "customer") {
+    cleanupDevicePhotos?.(payload.devices || []);
+    cleanupRequestRecordings?.(payload.requests || []);
+  }
   renderTrash();
 }
 

@@ -308,9 +308,13 @@ function markPaidAndClose(i){
   r.closed=true;
   r.closedAt=now;
   r.closeWallet=wallet;
-  put(K.r,a);
-  if(typeof syncTreasuryForOrderClose==="function")syncTreasuryForOrderClose(r,collected);
-  if(typeof syncWalletForOrderClose==="function")syncWalletForOrderClose(r,collected,wallet);
+  const saved=withRollback([K.r,K.wtx],()=>{
+    if(!put(K.r,a))return{ok:false};
+    if(typeof syncTreasuryForOrderClose==="function")syncTreasuryForOrderClose(r,collected);
+    if(typeof syncWalletForOrderClose==="function"&&!syncWalletForOrderClose(r,collected,wallet))return{ok:false};
+    return{ok:true};
+  });
+  if(!saved?.ok){alert("تعذر حفظ الإغلاق والحركة المالية معًا؛ لم يتم إغلاق أمر الشغل.");return}
   window.auditLog?.("تحصيل وإغلاق", "أمر شغل", r.id, `المبلغ المحصل ${collected.toFixed(2)} ج`);
   location.reload();
 }
