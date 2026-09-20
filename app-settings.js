@@ -142,11 +142,17 @@ function walletCapsSettingHtml(){
   let s=settings(),wallets=s.wallets||[],caps=s.walletCaps||{};
   return `<section class="panel setting-list-panel" id="wallet-caps-panel">
     <div class="page-head"><h2>🔒 حد أقصى اختياري لبعض الحسابات</h2></div>
-    <div class="hint">مفيد لحساب زي إنستاباي لو مش عايز تسجّله هنا بكامل رصيده الحقيقي (لأنه في الأصل جزء من حسابك البنكي الشخصي) — حط رقم تقريبي، وهو ده اللي هيدخل في رصيد المحفظة المعروض وفي إجمالي كل الحسابات، حتى لو الحركات الفعلية المسجلة جمعت لرقم أعلى. سيبه فاضي لأي محفظة تحب تحسب برصيدها الحقيقي كامل بدون حد.</div>
-    ${wallets.length?wallets.map(w=>`<div class="setting-row inline-edit-row">
+    <div class="hint">⚠️ الخانة دي مش "الرصيد الحالي/الافتتاحي" — لو حطيت فيها رقم، أي مبلغ يتسجل في الحساب ده بعد كده (عربون، تحصيل، أي حركة) هيفضل يتسجل عادي في كشف الحركات، لكن الرصيد والإجمالي المعروضين هيقفوا عند الرقم ده ومش هيزيدوا. سيبها فاضية لأي حساب تحب يتحسب برصيده الحقيقي الكامل من غير حد (ده الوضع الطبيعي للغالبية).</div>
+    ${wallets.length?wallets.map(w=>{
+      let capVal=caps[w]!==undefined&&caps[w]!==null&&caps[w]!==""?caps[w]:"";
+      let raw=typeof walletRawBalance==="function"?walletRawBalance(w):0;
+      let capNum=+capVal;
+      let warn=capVal!==""&&Number.isFinite(capNum)&&capNum>=0&&raw>capNum?`<div class="hint" style="color:var(--danger,#c0392b)">⚠️ الرصيد الفعلي من الحركات المسجّلة ${raw.toFixed(2)} ج، لكن المعروض متوقف عند ${capNum.toFixed(2)} ج بسبب الحد ده.</div>`:"";
+      return `<div class="setting-row inline-edit-row">
       <span class="setting-name">${esc(w)}</span>
-      <input type="number" min="0" step="0.01" class="inline-edit-input" placeholder="بدون حد" value="${caps[w]!==undefined&&caps[w]!==null&&caps[w]!==""?esc(String(caps[w])):""}" data-wf-event="change" data-wf-code="setWalletCap('${escAttr(w)}',this.value)">
-    </div>`).join(""):`<div class="hint">أضف حسابات أولًا من قسم "الحسابات" فوق.</div>`}
+      <input type="number" min="0" step="0.01" class="inline-edit-input" placeholder="بدون حد" value="${capVal!==""?esc(String(capVal)):""}" data-wf-event="change" data-wf-code="setWalletCap('${escAttr(w)}',this.value)">
+      ${warn}
+    </div>`}).join(""):`<div class="hint">أضف حسابات أولًا من قسم "الحسابات" فوق.</div>`}
   </section>`;
 }
 function setWalletCap(walletName,v){
