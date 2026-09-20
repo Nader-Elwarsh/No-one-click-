@@ -37,6 +37,7 @@
   function renderBackupReminder() {
     var host = document.getElementById("backupReminder");
     if (!host) return;
+    if (document.getElementById("automaticBackupPermission")) return;
     if (typeof daysSinceLastBackup !== "function") return;
     if (isSnoozed()) {
       host.innerHTML = "";
