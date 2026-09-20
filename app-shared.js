@@ -298,10 +298,15 @@ function markPaidAndClose(i){
   let a=arr(K.r),r=a.find(x=>x.id===i);
   if(!r||r.closed||r.paid)return;
   if(r.status!=="مكتمل"){alert("اجعل حالة أمر الشغل «مكتمل» أولًا.");return}
-  if(!confirm("تأكيد استلام كامل قيمة الأمر وإغلاقه نهائيًا؟ بعد التأكيد لن يمكن التعديل."))return;
   let wallet=document.getElementById("rCloseWallet")?.value||"";
-  let now=new Date().toISOString();
   let collected=Math.max(0,(+r.total||0)-(+r.deposit||0));
+  // لو فيه مبلغ محصّل ومحدد مفيش محفظة، لازم نلفت نظر المستخدم إن المبلغ
+  // ده مش هيتسجل في أي محفظة (upsertWalletTxForRef بيتجاهل الحركة لو
+  // مفيش محفظة، زي ما بالظبط بيحصل في تقفيل خط السير — نفس التحذير هنا
+  // عشان المستخدم مش يفاجأ إن المبلغ "اختفى" من الحسابات).
+  if(collected>0&&!wallet&&!confirm(`مفيش محفظة محددة للمبلغ المُحصّل (${collected.toFixed(2)} ج)، فمش هتتسجل كحركة في الحسابات.\n\nمتابعة الإغلاق من غير تسجيله في محفظة؟`))return;
+  if(!confirm("تأكيد استلام كامل قيمة الأمر وإغلاقه نهائيًا؟ بعد التأكيد لن يمكن التعديل."))return;
+  let now=new Date().toISOString();
   r.paid=true;
   r.remain=0;
   r.paidAt=now;
