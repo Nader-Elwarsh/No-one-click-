@@ -2,7 +2,7 @@
   "name": "workshop-fanya-pwa",
   "private": true,
   "scripts": {
-    "test": "node core-tests.js && node migration-tests.js && node stock-transaction-tests.js && node critical-path-smoke.js && node project-quality-check.js && node ui-quality-check.js && node security-quality-check.js && node date-local-quality-check.js && node audit-log-tests.js && node wallet-sync-tests.js && node cascade-delete-wallet-cleanup-tests.js && node trash-tests.js && node wf-action-wiring-check.js",
+    "test": "node core-tests.js && node migration-tests.js && node stock-transaction-tests.js && node critical-path-smoke.js && node project-quality-check.js && node ui-quality-check.js && node security-quality-check.js && node date-local-quality-check.js && node audit-log-tests.js && node wallet-sync-tests.js && node cascade-delete-wallet-cleanup-tests.js && node trash-tests.js && node wf-action-wiring-check.js && node automatic-backup-tests.js",
     "check": "node syntax-check.js && npm test",
     "browser-test": "bash browser-smoke.sh"
   }

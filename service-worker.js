@@ -1,4 +1,4 @@
-const CACHE_NAME = "workshop-v11-115-route-actions-fix";
+const CACHE_NAME = "workshop-v11-117-auto-backup";
 importScripts("./notif-shared.js");
 importScripts("./share-store.js");
 const CORE_FILES = [
