@@ -32,6 +32,11 @@ function walletBalance(walletName){
   let raw=walletRawBalance(walletName),cap=walletCapOf(walletName);
   return cap!==null&&raw>cap?cap:raw;
 }
+function linkedOrderForWalletTx(tx){
+  let ref=String(tx?.refKey||"");
+  let match=ref.match(/^order-(?:deposit|final)-(.+)$/);
+  return match?arr(K.r).find(r=>String(r.id)===match[1]):null;
+}
 function walletsOverview(){return (settings().wallets||[]).map(w=>({name:w,balance:walletBalance(w),raw:walletRawBalance(w),cap:walletCapOf(w)}))}
 // إجمالي الرصيد الكلي عبر كل المحافظ مع بعض، للعرض السريع فوق الصفحة.
 function walletsTotalBalance(){return walletsOverview().reduce((a,w)=>a+w.balance,0)}
@@ -341,7 +346,7 @@ function renderWalletDetail(){
     <h3 class="treasury-list-title">📋 كشف حركات ${isWallet?"المحفظة":"التصنيف"}</h3>
     ${entries.length?entries.map(x=>`<div class="treasury-row ${x.type}" id="tx-${x.id}">
       <div class="treasury-row-main">
-        <b>${esc(x.reason||"—")}</b>
+        <b>${(()=>{let order=linkedOrderForWalletTx(x);return order?`<a href="request.html?id=${encodeURIComponent(order.id)}" title="فتح أمر الشغل ${escAttr(order.no||"")}">${esc(x.reason||"—")} ↗</a>`:esc(x.reason||"—")})()}</b>
         <small>${esc(new Date((x.date||today)+"T"+(x.time||"00:00")).toLocaleString("ar-EG"))}${!isWallet?` • 💳 ${esc(x.wallet||"—")}`:""} • 🏷️ ${esc(x.category||"أخرى")}${x.subCategory?` • 📂 ${esc(x.subCategory)}`:""}${x.source==="order-link"?" • 🔗 أمر شغل":""}${x.source==="transfer"?" • 🔁 تحويل":""}${x.source==="migrated-expense"?" • ↩️ مرحّل من كشف الحساب القديم":""}</small>
         ${x.note?`<small>📝 ${esc(x.note)}</small>`:""}
       </div>

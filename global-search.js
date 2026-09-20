@@ -139,7 +139,11 @@
         cat: "wallet", icon: w.type === "in" ? "⬅️💳" : "➡️💳",
         title: w.reason || w.category || "حركة حساب",
         sub: [w.wallet, w.amount ? (+w.amount).toLocaleString("ar-EG") + " ج" : ""].filter(Boolean).join(" • "),
-        href: w.wallet ? ("wallet.html?type=wallet&name=" + encodeURIComponent(w.wallet)) : "wallets.html"
+        href: (function(){
+          var ref=String(w.refKey||""), match=ref.match(/^order-(?:deposit|final)-(.+)$/);
+          var order=match ? (arr(K.r)||[]).find(function(r){return String(r.id)===match[1]}) : null;
+          return order ? ("request.html?id=" + encodeURIComponent(order.id)) : (w.wallet ? ("wallet.html?type=wallet&name=" + encodeURIComponent(w.wallet)) : "wallets.html");
+        })()
       });
     });
 
