@@ -1,4 +1,4 @@
-const CACHE_NAME = "workshop-v11-120-update-banner";
+const CACHE_NAME = "workshop-v11-121-settings-accordion";
 importScripts("./notif-shared.js");
 importScripts("./share-store.js");
 const CORE_FILES = [

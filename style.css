@@ -652,3 +652,9 @@ input,select,textarea{min-height:40px;box-sizing:border-box}
    الفورم وقت التقريب. */
 .live-photo-preview{display:block;position:relative;z-index:2;width:100%;max-height:75vh;margin:4px auto 0;border-radius:10px;border:1px solid var(--border);object-fit:contain;touch-action:none;background:var(--bg-sunken)}
 .live-photo-preview-hint{font-size:11px;color:var(--text-muted);text-align:center;margin:2px 0 0}
+.panel>details>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:18px;font-weight:bold;margin:0;padding:4px 0;user-select:none}
+.panel>details>summary::-webkit-details-marker{display:none}
+.panel>details>summary::after{content:"▾";display:inline-block;transform:rotate(-90deg);transition:transform .15s ease;font-size:16px;color:var(--text-muted);flex:0 0 auto}
+.panel>details[open]>summary::after{transform:rotate(0deg)}
+.panel>details[open]>summary{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.panel-body{padding-top:2px}
