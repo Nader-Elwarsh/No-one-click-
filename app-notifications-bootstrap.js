@@ -92,7 +92,26 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(setupQuickForms,0));
     deferredPrompt=null;
   };
   if('serviceWorker' in navigator){
-    window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.69', {updateViaCache: 'none'}).catch(err=>console.warn('PWA service worker:',err)));
+    // شريط تنبيه بسيط لما يبقى فيه تحديث جديد للنظام جاهز ومستني بس التبويب/التطبيق
+    // يتقفل ويتفتح تاني — من غير التنبيه ده، أي تعديل في الكود (زي إصلاحات
+    // النسخة الاحتياطية التلقائية) ممكن يفضل "مش ظاهر" عند المستخدم لحد ما
+    // يعمل إغلاق كامل للتطبيق بنفسه من غير ما يعرف إنه محتاج كده أصلًا.
+    function announceWorkshopUpdate(){
+      if(document.getElementById('wf-update-banner'))return;
+      const bar=document.createElement('div');
+      bar.id='wf-update-banner';
+      bar.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:999999;background:#0b3d91;color:#fff;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;font:600 14px system-ui;box-shadow:0 -2px 10px rgba(0,0,0,.25)';
+      bar.innerHTML='<span>🔄 فيه تحديث جديد للنظام جاهز.</span><button type="button" style="background:#fff;color:#0b3d91;border:0;border-radius:6px;padding:6px 14px;font-weight:700;cursor:pointer">تحديث الآن</button>';
+      bar.querySelector('button').addEventListener('click',()=>location.reload());
+      (document.body||document.documentElement).appendChild(bar);
+    }
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.70', {updateViaCache: 'none'}).then(reg=>{
+      if(reg.waiting&&navigator.serviceWorker.controller)announceWorkshopUpdate();
+      reg.addEventListener('updatefound',()=>{
+        const nw=reg.installing;if(!nw)return;
+        nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller)announceWorkshopUpdate()});
+      });
+    }).catch(err=>console.warn('PWA service worker:',err)));
   }
   window.addEventListener('online',()=>document.documentElement.dataset.network='online');
   window.addEventListener('offline',()=>document.documentElement.dataset.network='offline');

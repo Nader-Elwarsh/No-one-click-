@@ -1,4 +1,4 @@
-const CACHE_NAME = "workshop-v11-119-html-sanitize-fix";
+const CACHE_NAME = "workshop-v11-120-update-banner";
 importScripts("./notif-shared.js");
 importScripts("./share-store.js");
 const CORE_FILES = [
