@@ -1,0 +1,100 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تشخيص النظام</title>
+<style>
+  body{font:16px/1.6 system-ui,sans-serif;padding:16px;background:#fff;color:#111}
+  h1{font-size:18px}
+  .ok{color:#0a7d2c;font-weight:700}
+  .bad{color:#c0182c;font-weight:700}
+  .box{border:1px solid #ddd;border-radius:8px;padding:10px;margin:8px 0;white-space:pre-wrap;word-break:break-word;font-family:monospace;font-size:13px}
+  #errors .box{background:#fff0f0;border-color:#f3b6b6}
+  #results .box{background:#f5f7ff}
+</style>
+</head>
+<body>
+<h1>🩺 صفحة تشخيص — النسخة الاحتياطية التلقائية</h1>
+<p>الصفحة دي بتحمّل نفس ملفات JS اللي بتحمّلها صفحة الإعدادات بالظبط، وبتوريك أي خطأ يحصل مباشرة هنا من غير ما تحتاج Console.</p>
+
+<h2>1) أخطاء JavaScript (لو فيه)</h2>
+<div id="errors"><div class="box">…لسه بتحمّل، استنى كام ثانية…</div></div>
+
+<h2>2) نتيجة الفحص</h2>
+<div id="results"><div class="box">…لسه بتحمّل…</div></div>
+
+<script>
+  window.__wfErrors = [];
+  window.addEventListener('error', function(e){
+    window.__wfErrors.push('❌ خطأ في ' + (e.filename ? e.filename.split('/').pop() : 'ملف غير معروف') + ' (سطر ' + e.lineno + '): ' + e.message);
+    renderErrors();
+  });
+  window.addEventListener('unhandledrejection', function(e){
+    window.__wfErrors.push('❌ خطأ Promise: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+    renderErrors();
+  });
+  function renderErrors(){
+    var host = document.getElementById('errors');
+    if(!window.__wfErrors.length){ host.innerHTML = '<div class="box ok">✅ مفيش أي خطأ JavaScript ظهر لحد دلوقتي.</div>'; return; }
+    host.innerHTML = window.__wfErrors.map(function(m){return '<div class="box bad">'+m+'</div>';}).join('');
+  }
+</script>
+
+<!-- نفس ملفات settings.html بالظبط وبنفس الترتيب -->
+<script src="notif-shared.js" defer></script>
+<script src="shared-data.js" defer></script>
+<script src="audit-log.js" defer></script>
+<script src="global-search.js" defer></script>
+<script src="bottom-nav.js" defer></script>
+<script src="image-store.js" defer></script>
+<script src="migrations.js" defer></script>
+<script src="treasury.js" defer></script>
+<script src="wallets.js" defer></script>
+<script src="tasks.js" defer></script>
+<script src="app-shared.js" defer></script>
+<script src="app-dashboard-reports.js" defer></script>
+<script src="app-customers.js" defer></script>
+<script src="app-devices.js" defer></script>
+<script src="app-requests.js" defer></script>
+<script src="app-settings-lists.js" defer></script>
+<script src="app-parts.js" defer></script>
+<script src="app-fault-codes.js" defer></script>
+<script src="app-compressor-codes.js" defer></script>
+<script src="app-settings.js" defer></script>
+<script src="app-delete-tools.js" defer></script>
+<script src="app-trash.js" defer></script>
+<script src="app-route-followup.js" defer></script>
+<script src="app-data-management.js" defer></script>
+<script src="app-quick-add.js" defer></script>
+<script src="app-notifications-bootstrap.js" defer></script>
+
+<script>
+  function reportLine(label, ok, extra){
+    return '<div class="box '+(ok?'ok':'bad')+'">'+(ok?'✅':'❌')+' '+label+(extra?(' — '+extra):'')+'</div>';
+  }
+  function runChecks(){
+    var out = '';
+    out += reportLine('تحميل app-data-management.js بنجاح', typeof initAutomaticBackup === 'function', typeof initAutomaticBackup);
+    out += reportLine('دالة migrateLegacyAutoBackupOptOut موجودة (يعني آخر نسخة فعلاً محمّلة)', typeof migrateLegacyAutoBackupOptOut === 'function');
+    // نجهز عنصر lastBackupInfo يدوي عشان نختبر renderAutomaticBackupControls زي ما بيحصل في صفحة الإعدادات
+    var host = document.createElement('p');
+    host.id = 'lastBackupInfo';
+    document.body.appendChild(host);
+    try {
+      if (typeof renderAutomaticBackupControls === 'function') {
+        renderAutomaticBackupControls();
+        var box = document.getElementById('automaticBackupControls');
+        out += reportLine('renderAutomaticBackupControls اشتغلت وحطّت الخانة فعليًا', !!box, box ? box.textContent.slice(0,60) : 'مفيش عنصر اتحط');
+      } else {
+        out += reportLine('دالة renderAutomaticBackupControls مش موجودة خالص', false);
+      }
+    } catch(e) {
+      out += reportLine('renderAutomaticBackupControls رمت خطأ وقت التشغيل', false, e.message);
+    }
+    try {
+      var val = localStorage.getItem('wf_auto_backup_enabled');
+      out += reportLine('قيمة wf_auto_backup_enabled المحفوظة عندك دلوقتي', true, val === null ? '(فاضية/null — يعني أول مرة)' : val);
+    } catch(e) {}
+    document.getElementById('results').innerHTML = out;
+  }
+  window.addEventListener('load', function(){ setTimeout(runChecks, 300); });
+</script>
+</body></html>
