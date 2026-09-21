@@ -79,7 +79,7 @@ async function initShareTarget() {
       if (audioBox) {
         try {
           let objUrl = URL.createObjectURL(payload.file);
-          audioBox.innerHTML = `<audio controls src="${objUrl}" style="width:100%"></audio>`;
+          audioBox.innerHTML = `<audio controls src="${esc(objUrl)}" style="width:100%"></audio>`;
           audioBox.classList.remove("hidden");
         } catch (e) { console.error("[share-target] تعذرت معاينة الملف", e); }
       }
@@ -105,7 +105,7 @@ async function initShareTarget() {
       try {
         let src = await window.ImageStore.resolveSrc(audioRef);
         if (audioBox && src) {
-          audioBox.innerHTML = `<audio controls src="${src}" style="width:100%"></audio>`;
+          audioBox.innerHTML = `<audio controls src="${esc(src)}" style="width:100%"></audio>`;
           audioBox.classList.remove("hidden");
         }
       } catch (e) { console.error("[share-target] تعذر استرجاع التسجيل", e); }

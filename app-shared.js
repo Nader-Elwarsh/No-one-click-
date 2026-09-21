@@ -14,7 +14,7 @@ async function showImagePreview(ref,title){
   document.querySelectorAll(".img-preview-overlay").forEach(x=>x.remove());
   const ov=document.createElement("div");
   ov.className="img-preview-overlay";
-  ov.innerHTML=`<div class="img-preview-box"><div class="img-preview-head"><b>${esc(title||"عرض الصورة")}</b><button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="this.closest('.img-preview-overlay').remove()">✖ إغلاق</button></div><img src="${src}"><p class="img-preview-zoom-hint">🤏 قرّبي بإصبعين أو دبل تاب للتكبير</p></div>`;
+  ov.innerHTML=`<div class="img-preview-box"><div class="img-preview-head"><b>${esc(title||"عرض الصورة")}</b><button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="this.closest('.img-preview-overlay').remove()">✖ إغلاق</button></div><img src="${esc(src)}"><p class="img-preview-zoom-hint">🤏 قرّبي بإصبعين أو دبل تاب للتكبير</p></div>`;
   ov.addEventListener("click",e=>{if(e.target===ov)ov.remove()});
   document.body.appendChild(ov);
   const img=ov.querySelector(".img-preview-box img");
@@ -70,7 +70,7 @@ function enablePinchZoomPan(img){
 function renderLivePhotoPreview(hostId, dataURL) {
   const host = document.getElementById(hostId); if (!host) return;
   if (!dataURL) { host.innerHTML = ""; return; }
-  host.innerHTML = `<img class="live-photo-preview" src="${dataURL}"><p class="live-photo-preview-hint">🤏 قرّبي بإصبعين أو دبل تاب على الصورة نفسها للتكبير والتحرك فيها في مكانها</p>`;
+  host.innerHTML = `<img class="live-photo-preview" src="${esc(dataURL)}"><p class="live-photo-preview-hint">🤏 قرّبي بإصبعين أو دبل تاب على الصورة نفسها للتكبير والتحرك فيها في مكانها</p>`;
   const img = host.querySelector(".live-photo-preview");
   if (img) enablePinchZoomPan(img);
 }

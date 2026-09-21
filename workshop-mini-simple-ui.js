@@ -439,7 +439,7 @@
     if (sortKey === "newest") filtered.sort((a, b) => byCreated(b) - byCreated(a));
     else if (sortKey === "oldest") filtered.sort((a, b) => byCreated(a) - byCreated(b));
     else if (sortKey === "type") filtered.sort((a, b) => String(a.type || "").localeCompare(String(b.type || ""), "ar"));
-    const title = bucket.indexOf("type:") === 0 ? `📦 ${bucket.slice(5)}` :
+    const title = bucket.indexOf("type:") === 0 ? `📦 ${esc2(bucket.slice(5))}` :
       ({active:"عليه أمر مفتوح حاليًا", workshop:"موجود في الورشة", completed:"كل أوامره مكتملة", none:"بدون أي أمر شغل", recurring:"🔁 متكرر الأعطال", stale:"⏳ لم يتردد جهازه من فترة"}[bucket] || "كل الأجهزة");
     const sortSelectHtml = `<select id="deviceSortSelect" data-wf-event="change" data-wf-code="renderDevices()">
       <option value="newest" ${sortKey === "newest" ? "selected" : ""}>الأحدث أولًا</option>

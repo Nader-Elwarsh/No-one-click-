@@ -153,7 +153,7 @@ async function requestProfile(){let el=document.getElementById("requestProfile")
       let src=window.ImageStore?await window.ImageStore.resolveSrc(cr.ref):"";
       if(!src)return "";
       let when=cr.at?new Date(cr.at).toLocaleString("ar-EG"):"";
-      return `<div class="kv"><b>🎙️ تسجيل ${i+1}${recs.length>1?` من ${recs.length}`:""}</b>${when?`<small>${esc(when)}</small>`:""}<audio controls src="${src}" style="width:100%"></audio></div>`;
+      return `<div class="kv"><b>🎙️ تسجيل ${i+1}${recs.length>1?` من ${recs.length}`:""}</b>${when?`<small>${esc(when)}</small>`:""}<audio controls src="${esc(src)}" style="width:100%"></audio></div>`;
     }));
     let html=items.join("");
     if(html)box.innerHTML=`<div class="workshop-track"><h3>🎙️ تسجيلات المكالمات (${recs.length})</h3>${html}</div>`;
