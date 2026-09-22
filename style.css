@@ -658,3 +658,4 @@ input,select,textarea{min-height:40px;box-sizing:border-box}
 .panel>details[open]>summary::after{transform:rotate(0deg)}
 .panel>details[open]>summary{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
 .panel-body{padding-top:2px}
+.page-head-actions{display:flex;justify-content:flex-end;margin-bottom:8px}

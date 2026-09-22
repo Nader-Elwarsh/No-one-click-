@@ -1,4 +1,4 @@
-const CACHE_NAME = "workshop-v11-121-settings-accordion";
+const CACHE_NAME = "workshop-v11-122-settings-accordion-dynamic";
 importScripts("./notif-shared.js");
 importScripts("./share-store.js");
 const CORE_FILES = [

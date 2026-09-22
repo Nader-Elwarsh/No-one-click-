@@ -1,13 +1,13 @@
 /* app-settings.js — صفحة الإعدادات العامة: القوائم القابلة للتعديل والترتيب بالسحب، ثيم خط السير، المراكز/الأنواع/الماركات/تصنيفات القطع. */
 function listEditorHtml(title,key,icon){
   let a=settings()[key]||[];
-  return `<section class="panel setting-list-panel"><div class="page-head"><h2>${icon} ${title}</h2><button class="secondary mini-action" data-wf-event="click" data-wf-code="addSettingItem('${key}')">➕ إضافة</button></div><div class="drag-hint">☷ اسحب أي عنصر وأفلته في المكان المطلوب</div><div id="list-${key}" class="sortable-list">${a.map((x,i)=>`<div class="setting-row drag-item" draggable="true" data-drag-kind="list" data-drag-key="${esc(key)}" data-drag-index="${i}"><span class="drag-handle" title="سحب للترتيب">☷</span><span class="setting-name"><b>${i+1}.</b> ${esc(x)}</span><span class="compact-actions"><input class="order-number" type="number" min="1" max="${a.length}" value="${i+1}" title="رقم الترتيب" data-wf-event="change" data-wf-code="setListPosition('${key}',${i},this.value)"><button class="secondary mini-action" data-wf-event="click" data-wf-code="renameSettingItem('${key}',${i})">✏️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="deleteSettingItem('${key}',${i})">🗑️</button></span></div>`).join("")}</div></section>`
+  return `<section class="panel setting-list-panel"><details><summary>${icon} ${title}</summary><div class="panel-body"><div class="page-head-actions"><button class="secondary mini-action" data-wf-event="click" data-wf-code="addSettingItem('${key}')">➕ إضافة</button></div><div class="drag-hint">☷ اسحب أي عنصر وأفلته في المكان المطلوب</div><div id="list-${key}" class="sortable-list">${a.map((x,i)=>`<div class="setting-row drag-item" draggable="true" data-drag-kind="list" data-drag-key="${esc(key)}" data-drag-index="${i}"><span class="drag-handle" title="سحب للترتيب">☷</span><span class="setting-name"><b>${i+1}.</b> ${esc(x)}</span><span class="compact-actions"><input class="order-number" type="number" min="1" max="${a.length}" value="${i+1}" title="رقم الترتيب" data-wf-event="change" data-wf-code="setListPosition('${key}',${i},this.value)"><button class="secondary mini-action" data-wf-event="click" data-wf-code="renameSettingItem('${key}',${i})">✏️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="deleteSettingItem('${key}',${i})">🗑️</button></span></div>`).join("")}</div></div></details></section>`
 }
 function orderTagsSettingHtml(){
   let s=settings(),active=s.orderTags||[],disabled=s.orderTagsDisabled||[];
   let activeRows=active.map((x,i)=>`<div class="setting-row"><span class="setting-name"><b>${i+1}.</b> ${esc(x)}</span><span class="compact-actions"><button class="secondary mini-action" data-wf-event="click" data-wf-code="moveOrderTag(${i},-1)" title="لأعلى">⬆️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="moveOrderTag(${i},1)" title="لأسفل">⬇️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="renameOrderTag('${escAttr(x)}')">✏️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="disableOrderTag('${escAttr(x)}')" title="إيقاف الاستخدام مؤقتًا بدون حذف">⏸️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="deleteOrderTag('${escAttr(x)}')">🗑️</button></span></div>`).join("");
   let disabledRows=disabled.map(x=>`<div class="setting-row setting-row-disabled"><span class="setting-name">🚫 ${esc(x)} <small>(متوقف)</small></span><span class="compact-actions"><button class="secondary mini-action" data-wf-event="click" data-wf-code="enableOrderTag('${escAttr(x)}')" title="إعادة التفعيل">▶️ تفعيل</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="deleteOrderTag('${escAttr(x)}')">🗑️</button></span></div>`).join("");
-  return `<section class="panel setting-list-panel" id="order-tags-panel"><div class="page-head"><h2>🏷️ التصنيف اليدوي لأوامر الشغل</h2><button class="secondary mini-action" data-wf-event="click" data-wf-code="addOrderTag()">➕ إضافة</button></div><div class="hint">التصنيفات دي بتظهر كخيارات في "التصنيف اليدوي" جوه كل أمر شغل. أوقف أي تصنيف (⏸️) من غير ما تحذفه لو مش هتستخدمه دلوقتي بس عايز تحتفظ بيه — التصنيف الموقوف بيفضل ظاهر في أي أمر شغل قديم مستخدمه بالفعل، بس مش هيبقى خيار متاح لأمر جديد لحد ما ترجّعه (▶️). الحذف النهائي (🗑️) بيشيله من القايمة تمامًا.</div>${activeRows||"<div class='hint'>لا توجد تصنيفات مضافة بعد.</div>"}${disabled.length?`<div class="setting-subhead">⏸️ متوقفة مؤقتًا</div>${disabledRows}`:""}</section>`;
+  return `<section class="panel setting-list-panel" id="order-tags-panel"><details><summary>🏷️ التصنيف اليدوي لأوامر الشغل</summary><div class="panel-body"><div class="page-head-actions"><button class="secondary mini-action" data-wf-event="click" data-wf-code="addOrderTag()">➕ إضافة</button></div><div class="hint">التصنيفات دي بتظهر كخيارات في "التصنيف اليدوي" جوه كل أمر شغل. أوقف أي تصنيف (⏸️) من غير ما تحذفه لو مش هتستخدمه دلوقتي بس عايز تحتفظ بيه — التصنيف الموقوف بيفضل ظاهر في أي أمر شغل قديم مستخدمه بالفعل، بس مش هيبقى خيار متاح لأمر جديد لحد ما ترجّعه (▶️). الحذف النهائي (🗑️) بيشيله من القايمة تمامًا.</div>${activeRows||"<div class='hint'>لا توجد تصنيفات مضافة بعد.</div>"}${disabled.length?`<div class="setting-subhead">⏸️ متوقفة مؤقتًا</div>${disabledRows}`:""}</div></details></section>`;
 }
 function reorderSetting(kind,key,from,to){
   let s=settings();
@@ -72,7 +72,7 @@ function settingsPage(){
   brandSettings.innerHTML=s.brands.map((b,i)=>`<div class="setting-row drag-item" draggable="true" data-drag-kind="brands" data-drag-index="${i}"><span class="drag-handle" title="سحب للترتيب">☷</span><span class="setting-name"><b>${i+1}. ${esc(b)}</b></span><span class="compact-actions"><input class="order-number" type="number" min="1" max="${s.brands.length}" value="${i+1}" title="رقم الترتيب" data-wf-event="change" data-wf-code="setListPosition('brands',${i},this.value)"><button class="secondary mini-action" data-wf-event="click" data-wf-code="renameBrand('${escAttr(b)}')">✏️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="deleteBrand('${escAttr(b)}')">🗑️</button></span></div>`).join("");
   partCategorySettings.innerHTML=s.partCats.map((b,i)=>`<div class="setting-row drag-item" draggable="true" data-drag-kind="partCats" data-drag-index="${i}"><span class="drag-handle" title="سحب للترتيب">☷</span><span class="setting-name"><b>${i+1}. ${esc(b)}</b></span><span class="compact-actions"><input class="order-number" type="number" min="1" max="${s.partCats.length}" value="${i+1}" title="رقم الترتيب" data-wf-event="change" data-wf-code="setListPosition('partCats',${i},this.value)"><button class="secondary mini-action" data-wf-event="click" data-wf-code="renamePartCategory('${escAttr(b)}')">✏️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="deletePartCategory('${escAttr(b)}')">🗑️</button></span></div>`).join("");
   let host=document.getElementById("settingsDynamic");
-  if(host)host.innerHTML=`<section class="panel setting-list-panel"><div class="page-head"><h2>🛠️ دورة حالات أمر الشغل</h2></div><div class="hint">الحالات (جديد / جاري التنفيذ / مكتمل / ملغي) وحالات الورشة (غير مطلوب / تم السحب / تم التسليم) بقت دورة معتمدة وثابتة، ومش قابلة للتعديل من هنا. الأولوية اتشالت خالص من أوامر الشغل. راجع ملف WORK_ORDER_LIFECYCLE_APPROVED.md لتفاصيل الدورة والانتقالات المسموحة.</div></section>`+returnWindowSettingHtml()+overdueAlertSettingHtml()+orderTagsSettingHtml()+[["أماكن التنفيذ","executionPlaces","📍"],["حالات الدفع","paymentStatuses","💳"],["وحدات القياس","units","📏"],["أنواع العناوين","addressTypes","🏠"]].map(x=>listEditorHtml(...x)).join("");
+  if(host)host.innerHTML=`<section class="panel setting-list-panel"><details><summary>🛠️ دورة حالات أمر الشغل</summary><div class="panel-body"><div class="hint">الحالات (جديد / جاري التنفيذ / مكتمل / ملغي) وحالات الورشة (غير مطلوب / تم السحب / تم التسليم) بقت دورة معتمدة وثابتة، ومش قابلة للتعديل من هنا. الأولوية اتشالت خالص من أوامر الشغل. راجع ملف WORK_ORDER_LIFECYCLE_APPROVED.md لتفاصيل الدورة والانتقالات المسموحة.</div></div></details></section>`+returnWindowSettingHtml()+overdueAlertSettingHtml()+orderTagsSettingHtml()+[["أماكن التنفيذ","executionPlaces","📍"],["حالات الدفع","paymentStatuses","💳"],["وحدات القياس","units","📏"],["أنواع العناوين","addressTypes","🏠"]].map(x=>listEditorHtml(...x)).join("");
   let walletHost=document.getElementById("walletSettingsDynamic");
   if(walletHost)walletHost.innerHTML=defaultWalletSettingHtml()+[["الحسابات (محفظتي الشخصية، فودافون كاش، أورنج كاش، إنستاباي... أضف أي حساب تحب)","wallets","💳"],["التصنيف (شخصي / تشغيل / تحصيل عميل / سلفة تحويل / أخرى...)","walletCategories","🏷️"]].map(x=>inlineListEditorHtml(...x)).join("")+[["نوع المصروف — لما التصنيف \"مصروف تشغيل\" (وقود، صيانة عدة...)","expenseCategories","🧯"],["نوع المصروف — لما التصنيف \"مصروف شخصي\" (مواصلات، أكل وشرب...)","personalExpenseCategories","🙋"]].map(x=>listEditorHtml(...x)).join("")+walletCapsSettingHtml();
   let pinHost=document.getElementById("pinLockSettings");
@@ -129,7 +129,7 @@ function removeAppPin(){
 }
 function defaultWalletSettingHtml(){
   let s=settings(),wallets=s.wallets||[],cur=s.defaultWallet||"";
-  return `<section class="panel setting-list-panel" id="default-wallet-panel"><div class="page-head"><h2>⭐ المحفظة الافتراضية</h2></div><div class="hint">أي دفعة/عربون أو تقفيل أمر شغل هيتحدد له تلقائي المحفظة دي، إلا لو غيّرتها بنفسك وقت العملية.</div><select id="defaultWalletSelect" data-wf-event="change" data-wf-code="setDefaultWallet(this.value)"><option value="">بدون تحديد افتراضي</option>${wallets.map(w=>`<option ${cur===w?"selected":""}>${esc(w)}</option>`).join("")}</select></section>`;
+  return `<section class="panel setting-list-panel" id="default-wallet-panel"><details><summary>⭐ المحفظة الافتراضية</summary><div class="panel-body"><div class="hint">أي دفعة/عربون أو تقفيل أمر شغل هيتحدد له تلقائي المحفظة دي، إلا لو غيّرتها بنفسك وقت العملية.</div><select id="defaultWalletSelect" data-wf-event="change" data-wf-code="setDefaultWallet(this.value)"><option value="">بدون تحديد افتراضي</option>${wallets.map(w=>`<option ${cur===w?"selected":""}>${esc(w)}</option>`).join("")}</select></div></details></section>`;
 }
 function setDefaultWallet(v){let s=settings();s.defaultWallet=v||"";put(K.s,s);settingsPage()}
 /* ---------------------------------------------------------------------
@@ -141,7 +141,7 @@ function setDefaultWallet(v){let s=settings();s.defaultWallet=v||"";put(K.s,s);s
 function walletCapsSettingHtml(){
   let s=settings(),wallets=s.wallets||[],caps=s.walletCaps||{};
   return `<section class="panel setting-list-panel" id="wallet-caps-panel">
-    <div class="page-head"><h2>🔒 حد أقصى اختياري لبعض الحسابات</h2></div>
+    <details><summary>🔒 حد أقصى اختياري لبعض الحسابات</summary><div class="panel-body">
     <div class="hint">⚠️ الخانة دي مش "الرصيد الحالي/الافتتاحي" — لو حطيت فيها رقم، أي مبلغ يتسجل في الحساب ده بعد كده (عربون، تحصيل، أي حركة) هيفضل يتسجل عادي في كشف الحركات، لكن الرصيد والإجمالي المعروضين هيقفوا عند الرقم ده ومش هيزيدوا. سيبها فاضية لأي حساب تحب يتحسب برصيده الحقيقي الكامل من غير حد (ده الوضع الطبيعي للغالبية).</div>
     ${wallets.length?wallets.map(w=>{
       let capVal=caps[w]!==undefined&&caps[w]!==null&&caps[w]!==""?caps[w]:"";
@@ -153,7 +153,7 @@ function walletCapsSettingHtml(){
       <input type="number" min="0" step="0.01" class="inline-edit-input" placeholder="بدون حد" value="${capVal!==""?esc(String(capVal)):""}" data-wf-event="change" data-wf-code="setWalletCap('${escAttr(w)}',this.value)">
       ${warn}
     </div>`}).join(""):`<div class="hint">أضف حسابات أولًا من قسم "الحسابات" فوق.</div>`}
-  </section>`;
+  </div></details></section>`;
 }
 function setWalletCap(walletName,v){
   let s=settings();s.walletCaps=s.walletCaps||{};
@@ -164,7 +164,7 @@ function setWalletCap(walletName,v){
 }
 function returnWindowSettingHtml(){
   let s=settings(),days=+s.returnWindowDays||7;
-  return `<section class="panel setting-list-panel" id="return-window-panel"><div class="page-head"><h2>🔄 مهلة المرتجع بعد إغلاق الأمر</h2></div><div class="hint">أمر الشغل المكتمل وغير المغلق يفضل قابل للإرجاع/التعديل في أي وقت. أما بعد "تم الدفع بالكامل وإغلاق الأمر"، فبيبقى قابل للإرجاع فقط خلال عدد الأيام ده من تاريخ الإغلاق؛ بعدها مفيش مرتجع ولا تعديل.</div><div class="inline"><input id="returnWindowDaysInput" type="number" min="1" step="1" value="${days}" style="max-width:110px"><button class="secondary mini-action" data-wf-event="click" data-wf-code="setReturnWindowDays()">💾 حفظ المدة</button><span class="hint">حاليًا: ${days} يوم</span></div></section>`;
+  return `<section class="panel setting-list-panel" id="return-window-panel"><details><summary>🔄 مهلة المرتجع بعد إغلاق الأمر</summary><div class="panel-body"><div class="hint">أمر الشغل المكتمل وغير المغلق يفضل قابل للإرجاع/التعديل في أي وقت. أما بعد "تم الدفع بالكامل وإغلاق الأمر"، فبيبقى قابل للإرجاع فقط خلال عدد الأيام ده من تاريخ الإغلاق؛ بعدها مفيش مرتجع ولا تعديل.</div><div class="inline"><input id="returnWindowDaysInput" type="number" min="1" step="1" value="${days}" style="max-width:110px"><button class="secondary mini-action" data-wf-event="click" data-wf-code="setReturnWindowDays()">💾 حفظ المدة</button><span class="hint">حاليًا: ${days} يوم</span></div></div></details></section>`;
 }
 function setReturnWindowDays(){
   let el=document.getElementById("returnWindowDaysInput"),n=parseInt(el?.value,10);
@@ -173,7 +173,7 @@ function setReturnWindowDays(){
 }
 function overdueAlertSettingHtml(){
   let s=settings(),days=+s.overdueAlertDays||7,mid=Math.max(1,Math.floor(days/2));
-  return `<section class="panel setting-list-panel" id="overdue-alert-panel"><div class="page-head"><h2>⏳ تنبيه الأوامر القديمة (لسه واقفة)</h2></div><div class="hint">أي أمر شغل مفتوح (جديد أو جاري التنفيذ) لو فضل من غير ما يتقفل عدد الأيام ده أو أكتر من تاريخ تسجيله، هيتلوّن 🔴 أحمر في قايمة الأوامر ويظهر في تنبيه "🔥 يحتاج انتباه" بالشاشة الرئيسية. اللون بيتدرّج تلقائي: 🟢 أقل من ${mid} يوم، 🟡 من ${mid} لحد ${Math.max(mid,days-1)} يوم، 🔴 ${days} يوم فأكتر.</div><div class="inline"><input id="overdueAlertDaysInput" type="number" min="1" step="1" value="${days}" style="max-width:110px"><button class="secondary mini-action" data-wf-event="click" data-wf-code="setOverdueAlertDays()">💾 حفظ العدد</button><span class="hint">حاليًا: ${days} يوم</span></div></section>`;
+  return `<section class="panel setting-list-panel" id="overdue-alert-panel"><details><summary>⏳ تنبيه الأوامر القديمة (لسه واقفة)</summary><div class="panel-body"><div class="hint">أي أمر شغل مفتوح (جديد أو جاري التنفيذ) لو فضل من غير ما يتقفل عدد الأيام ده أو أكتر من تاريخ تسجيله، هيتلوّن 🔴 أحمر في قايمة الأوامر ويظهر في تنبيه "🔥 يحتاج انتباه" بالشاشة الرئيسية. اللون بيتدرّج تلقائي: 🟢 أقل من ${mid} يوم، 🟡 من ${mid} لحد ${Math.max(mid,days-1)} يوم، 🔴 ${days} يوم فأكتر.</div><div class="inline"><input id="overdueAlertDaysInput" type="number" min="1" step="1" value="${days}" style="max-width:110px"><button class="secondary mini-action" data-wf-event="click" data-wf-code="setOverdueAlertDays()">💾 حفظ العدد</button><span class="hint">حاليًا: ${days} يوم</span></div></div></details></section>`;
 }
 function setOverdueAlertDays(){
   let el=document.getElementById("overdueAlertDaysInput"),n=parseInt(el?.value,10);
@@ -210,7 +210,7 @@ function deleteSettingItem(key,i){let s=settings(),a=s[key]||[];if(i<0||i>=a.len
 function inlineListEditorHtml(title,key,icon){
   let a=settings()[key]||[];
   return `<section class="panel setting-list-panel">
-    <div class="page-head"><h2>${icon} ${esc(title)}</h2></div>
+    <details><summary>${icon} ${esc(title)}</summary><div class="panel-body">
     <div class="inline-add-row">
       <input type="text" id="newInlineItem-${esc(key)}" placeholder="اسم جديد" onkeydown="if(event.key==='Enter'){event.preventDefault();addInlineListItem('${escAttr(key)}')}">
       <button type="button" class="primary mini-action" data-wf-event="click" data-wf-code="addInlineListItem('${escAttr(key)}')">➕ إضافة</button>
@@ -226,7 +226,7 @@ function inlineListEditorHtml(title,key,icon){
         </span>
       </div>`).join(""):`<div class="hint">لا توجد عناصر بعد. أضف واحد من الحقل فوق.</div>`}
     </div>
-  </section>`;
+  </div></details></section>`;
 }
 // تأكيد حذف بدون confirm(): أول ضغطة تحوّل الزرار لـ "تأكيد الحذف؟" لمدة
 // 3 ثواني، وثاني ضغطة (في نفس المهلة) هي اللي فعليًا بتنفذ الحذف.
