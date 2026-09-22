@@ -156,7 +156,11 @@
     let favs = favorites();
     const key=compressorKey(brand,model),idx = favs.findIndex(f => compressorKey(f.brand,f.model) === key);
     if (idx >= 0) favs.splice(idx, 1);
-    else favs.push({ brand, model, rec: JSON.parse(recJson), addedAt: new Date().toISOString() });
+    else {
+      let rec;
+      try { rec = JSON.parse(recJson); } catch(e) { console.error("[compressor] بيانات المفضلة غير صالحة", e); return; }
+      favs.push({ brand, model, rec, addedAt: new Date().toISOString() });
+    }
     putLS(LS_FAV, favs);
     renderCompressorResults();
   }
