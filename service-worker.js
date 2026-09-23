@@ -1,4 +1,4 @@
-const CACHE_NAME = "workshop-v11-123-audit";
+const CACHE_NAME = "workshop-v11-124-wa-templates-receipt";
 importScripts("./notif-shared.js");
 importScripts("./share-store.js");
 const CORE_FILES = [

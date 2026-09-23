@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(setupQuickForms,0));
       bar.querySelector('button').addEventListener('click',()=>location.reload());
       (document.body||document.documentElement).appendChild(bar);
     }
-    window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.72', {updateViaCache: 'none'}).then(reg=>{
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=11.73', {updateViaCache: 'none'}).then(reg=>{
       if(reg.waiting&&navigator.serviceWorker.controller)announceWorkshopUpdate();
       reg.addEventListener('updatefound',()=>{
         const nw=reg.installing;if(!nw)return;
