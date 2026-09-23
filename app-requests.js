@@ -349,6 +349,52 @@ function buildReceiptHtml(r){
   }).join("");
   return `<div class="receipt-doc"><div class="receipt-head"><h2>${esc(info.name||"الورشة الفنية")}</h2>${info.phone?`<div>📞 ${esc(info.phone)}</div>`:""}${info.address?`<div>📍 ${esc(info.address)}</div>`:""}</div><table class="receipt-table">${rows}</table>${info.footer?`<div class="receipt-footer">${esc(info.footer)}</div>`:""}</div>`;
 }
+// نسخة نصية مخصّصة من الإيصال لمشاركة واتساب/الأنظمة التانية، بدل الاعتماد
+// على استخراج innerText من جدول receipt-table: الخلايا المتجاورة (td) في
+// أغلب المتصفحات/الـWebViews بترجع من غير أي فاصل واضح بين التسمية
+// والقيمة (فبيوصل النص ملزّق زي "العربون400.00ج")، وده مختلف تمامًا عن شكل
+// الطباعة الفعلي (جدول منظم). الدالة دي بتاخد بالظبط نفس البنود والترتيب
+// والتفعيل من buildReceiptHtml وتطلعها سطر لكل بند "التسمية: القيمة".
+function buildReceiptText(r){
+  let s=settings();
+  let info=s.receiptInfo||{};
+  let fields=(s.receiptFields&&s.receiptFields.length?s.receiptFields:defaultReceiptFields()).filter(f=>f.enabled!==false);
+  let cust=arr(K.c).find(c=>c.id===r.customerId)||{};
+  let partsListText=(r.parts||[]).map(x=>{
+    let p=x.external?null:arr(K.p).find(z=>z.id===x.partId);
+    let nm=x.external?(x.name||"قطعة خارجية"):(p?.name||"قطعة محذوفة");
+    let amount=(x.qty||0)*(x.sell||0);
+    return `${nm} × ${x.qty} = ${amount.toFixed(2)} ج`;
+  }).join("\n")||"—";
+  const valueFor={
+    orderNo: r.no||"—",
+    orderDate: requestCreatedDate(r)?requestCreatedDate(r).toLocaleString("ar-EG"):"—",
+    customerName: customerName(r.customerId),
+    customerPhone: cust.phone||"—",
+    deviceInfo: deviceName(r.deviceId),
+    fault: r.fault||"—",
+    work: r.work||"—",
+    partsList: partsListText,
+    labor: (+r.labor||0).toFixed(2)+" ج",
+    partsTotal: (+r.partsTotal||0).toFixed(2)+" ج",
+    total: (+r.total||0).toFixed(2)+" ج",
+    deposit: (+r.deposit||0).toFixed(2)+" ج",
+    remaining: Math.max(0,(+r.total||0)-(+r.deposit||0)).toFixed(2)+" ج",
+    paymentStatus: r.paid?"مدفوع بالكامل":"غير مكتمل"
+  };
+  let lines=fields.map(f=>{
+    let val=f.builtin?valueFor[f.id]:(f.staticText||"");
+    if(val===undefined||val==="")return "";
+    return `${f.label||""}: ${val}`;
+  }).filter(Boolean);
+  let sep="——————————————";
+  let head=[info.name||"الورشة الفنية"];
+  if(info.phone)head.push("📞 "+info.phone);
+  if(info.address)head.push("📍 "+info.address);
+  let out=head.join("\n")+"\n"+sep+"\n"+lines.join("\n");
+  if(info.footer)out+="\n"+sep+"\n"+info.footer;
+  return out;
+}
 function ensureReceiptPrintHost(r){
   let host=document.getElementById("receiptPrintArea");
   if(!host){host=document.createElement("div");host.id="receiptPrintArea";host.className="hidden";document.body.appendChild(host)}
@@ -360,10 +406,14 @@ function printReceiptView(requestId){
   let target=ensureReceiptPrintHost(r);
   if(typeof window.printWorkshopTarget==="function")window.printWorkshopTarget({closest:()=>target});
 }
-function shareReceiptView(requestId){
+async function shareReceiptView(requestId){
   let r=arr(K.r).find(x=>x.id===requestId);if(!r)return;
-  let target=ensureReceiptPrintHost(r);
-  if(typeof window.shareWorkshopTarget==="function")window.shareWorkshopTarget({closest:()=>target});
+  let title="الورشة الفنية — إيصال "+(r.no||"");
+  let text=buildReceiptText(r);
+  if(navigator.share){
+    try{await navigator.share({title,text})}
+    catch(e){if(e?.name!=="AbortError"&&typeof window.psCopyFallback==="function")window.psCopyFallback(text)}
+  }else if(typeof window.psCopyFallback==="function")window.psCopyFallback(text);
 }
 function requestCommActionsHtml(r,custPhone){
   let templates=(settings().waTemplates||[]).map((t,i)=>({...t,i})).filter(t=>t.enabled!==false);

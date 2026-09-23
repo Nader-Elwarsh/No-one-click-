@@ -42,6 +42,24 @@
     if (s === "true") return true;
     if (s === "false") return false;
     if (/^-?\d+(\.\d+)?$/.test(s)) return Number(s);
+    // دعم أبسط شكل arrow function كـ"قيمة" بترتبط زي "()=>fnName(args)" —
+    // مستخدم في أزرار حذف بتلف الفعل الحقيقي جوه confirmClick(this,()=>...)
+    // عشان يتأجل التنفيذ للضغطة التانية (تأكيد الحذف). من غير الدعم ده،
+    // العنصر ده كان بيرجع undefined فيوقف callCode بالكامل (باعتباره خطأ)
+    // فالزرار مكنش بيعمل حاجة نهائي حتى ظهور رسالة "تأكيد الحذف؟" — وده
+    // بالظبط سبب عدم قدرة المستخدم على حذف بند مخصص/قالب واتساب/عنصر قايمة
+    // مهما ضغط على 🗑️.
+    var arrowCall = s.match(/^\(\)\s*=>\s*([A-Za-z_$][\w$]*)\((.*)\)$/s);
+    if (arrowCall) {
+      var fnName = arrowCall[1], argsSrc = arrowCall[2];
+      return function () {
+        var f = window[fnName];
+        if (typeof f !== "function") return;
+        var rawInner = argsSrc.trim() ? splitArgs(argsSrc) : [];
+        var argsInner = rawInner.map(function (x) { return literal(x, el, event); });
+        f.apply(el, argsInner);
+      };
+    }
     return undefined;
   }
   function callCode(code, el, event) {

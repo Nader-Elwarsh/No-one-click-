@@ -39,6 +39,7 @@
   // window.psInlineActions مش موجودة. بربطها هنا، كل نداءات psActions
   // في النظام بتاخد نفس النسخة المتاحة لقارئ الشاشة بدل التكرار الناقص.
   window.psInlineActions=makeActions;
+  window.psCopyFallback=copyFallback;
   window.printWorkshopTarget=printTarget;window.shareWorkshopTarget=shareTarget;
   window.printWorkshopPage=()=>window.print();window.shareWorkshopPage=()=>shareTarget({closest:()=>document.querySelector('main')});
 })();
