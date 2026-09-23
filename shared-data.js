@@ -251,8 +251,14 @@
     return arr(K.c).find(c => String(c.id) !== String(excludeId || "") && String(c.phone || "").replace(/\s+/g, "").trim() === normalized) || null;
   }
 
-  function customerName(i) { return arr(K.c).find(x => x.id === i)?.name || "—"; }
-  function deviceName(i) { let d = arr(K.d).find(x => x.id === i); return d ? `${d.type} - ${d.brand}` : "—"; }
+  // customerName/deviceName بيتناديلهم من جوه map() لقوايم طويلة (عملاء،
+  // أجهزة، أوامر شغل) في أكتر من صفحة — كل نداء كان بيعمل arr() (JSON.parse
+  // كامل للمصفوفة) من جديد. بنستخدم arrCached هنا عشان الاستدعاءات
+  // المتكررة على نفس البيانات (من غير أي تغيير في localStorage) ترجع من
+  // كاش القراءة بدل إعادة التحليل، وده بيفرق بشكل ملموس في السرعة لما
+  // يكون عدد العملاء/الأجهزة كبير.
+  function customerName(i) { return arrCached(K.c).find(x => x.id === i)?.name || "—"; }
+  function deviceName(i) { let d = arrCached(K.d).find(x => x.id === i); return d ? `${d.type} - ${d.brand}` : "—"; }
   function addresses(c) {
     let e = c.extraAddress || {};
     let hasExtra = !!(e.center || e.village || e.street || e.address);
