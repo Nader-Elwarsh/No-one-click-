@@ -1,7 +1,28 @@
 /* app-settings.js — صفحة الإعدادات العامة: القوائم القابلة للتعديل والترتيب بالسحب، ثيم خط السير، المراكز/الأنواع/الماركات/تصنيفات القطع. */
+// فتح وتمرير الصفحة لقسم إعدادات معيّن بناءً على location.hash (زي
+// settings.html#brands)، مستخدم من نتيجة البحث الشامل (global-search.js)
+// عشان تودّي المستخدم لنفس القسم بالظبط بدل ما يدوّر يدويًا وسط كل
+// الإعدادات. بتشتغل مع أي section لها id سواء كانت ثابتة في settings.html
+// أو متولّدة ديناميكيًا هنا (زي wa-templates-panel وsettings-list-*).
+function openSettingsPanelFromHash(){
+  let hash=(location.hash||"").replace(/^#/,"");
+  if(!hash)return;
+  let target=document.getElementById(hash);
+  if(!target)return;
+  // افتح details جوه الهدف نفسه (زي section#brands اللي فيها details
+  // واحدة) وكمان كل details أعلى منه في الشجرة (زي صف داخل سلة المهملات
+  // جوه قسم "سلة المهملات" نفسه) عشان العنصر يبان فعلاً مش يفضل مطوي
+  // جوه accordion مقفول.
+  let inner=target.querySelector("details");
+  if(inner)inner.open=true;
+  let el=target;
+  while(el){ if(el.tagName==="DETAILS")el.open=true; el=el.parentElement; }
+  requestAnimationFrame(()=>target.scrollIntoView({behavior:"smooth",block:"start"}));
+}
+if(typeof window!=="undefined")window.addEventListener("hashchange",()=>openSettingsPanelFromHash());
 function listEditorHtml(title,key,icon){
   let a=settings()[key]||[];
-  return `<section class="panel setting-list-panel"><details><summary>${icon} ${title}</summary><div class="panel-body"><div class="page-head-actions"><button class="secondary mini-action" data-wf-event="click" data-wf-code="addSettingItem('${key}')">➕ إضافة</button></div><div class="drag-hint">☷ اسحب أي عنصر وأفلته في المكان المطلوب</div><div id="list-${key}" class="sortable-list">${a.map((x,i)=>`<div class="setting-row drag-item" draggable="true" data-drag-kind="list" data-drag-key="${esc(key)}" data-drag-index="${i}"><span class="drag-handle" title="سحب للترتيب">☷</span><span class="setting-name"><b>${i+1}.</b> ${esc(x)}</span><span class="compact-actions"><input class="order-number" type="number" min="1" max="${a.length}" value="${i+1}" title="رقم الترتيب" data-wf-event="change" data-wf-code="setListPosition('${key}',${i},this.value)"><button class="secondary mini-action" data-wf-event="click" data-wf-code="renameSettingItem('${key}',${i})">✏️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="deleteSettingItem('${key}',${i})">🗑️</button></span></div>`).join("")}</div></div></details></section>`
+  return `<section class="panel setting-list-panel" id="settings-list-${esc(key)}"><details><summary>${icon} ${title}</summary><div class="panel-body"><div class="page-head-actions"><button class="secondary mini-action" data-wf-event="click" data-wf-code="addSettingItem('${key}')">➕ إضافة</button></div><div class="drag-hint">☷ اسحب أي عنصر وأفلته في المكان المطلوب</div><div id="list-${key}" class="sortable-list">${a.map((x,i)=>`<div class="setting-row drag-item" draggable="true" data-drag-kind="list" data-drag-key="${esc(key)}" data-drag-index="${i}"><span class="drag-handle" title="سحب للترتيب">☷</span><span class="setting-name"><b>${i+1}.</b> ${esc(x)}</span><span class="compact-actions"><input class="order-number" type="number" min="1" max="${a.length}" value="${i+1}" title="رقم الترتيب" data-wf-event="change" data-wf-code="setListPosition('${key}',${i},this.value)"><button class="secondary mini-action" data-wf-event="click" data-wf-code="renameSettingItem('${key}',${i})">✏️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="deleteSettingItem('${key}',${i})">🗑️</button></span></div>`).join("")}</div></div></details></section>`
 }
 function orderTagsSettingHtml(){
   let s=settings(),active=s.orderTags||[],disabled=s.orderTagsDisabled||[];
@@ -209,7 +230,7 @@ function deleteSettingItem(key,i){let s=settings(),a=s[key]||[];if(i<0||i>=a.len
    ========================================================= */
 function inlineListEditorHtml(title,key,icon){
   let a=settings()[key]||[];
-  return `<section class="panel setting-list-panel">
+  return `<section class="panel setting-list-panel" id="settings-list-${esc(key)}">
     <details><summary>${icon} ${esc(title)}</summary><div class="panel-body">
     <div class="inline-add-row">
       <input type="text" id="newInlineItem-${esc(key)}" placeholder="اسم جديد" onkeydown="if(event.key==='Enter'){event.preventDefault();addInlineListItem('${escAttr(key)}')}">

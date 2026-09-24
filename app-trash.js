@@ -87,13 +87,70 @@ function permanentlyDeleteTrash(trashId) {
   renderTrash();
 }
 
+// تفاصيل كل نوع محذوف (اسم/هاتف/عنوان للعميل، نوع/ماركة/مالك للجهاز،
+// رقم أمر/عميل/جهاز/عطل/إجمالي لأمر الشغل) + أي سجلات تابعة اتشالت معاه
+// (أجهزة/أوامر شغل)، عشان المستخدم يقدر يعرف بالظبط إيه اللي جوه كل سجل
+// في السلة قبل ما يقرر يرجّعه أو يمسحه نهائي.
+function trashEntryDetailsHtml(entry) {
+  const p = entry.payload || {};
+  const reqRow = r => `<div class="setting-row"><span>🛠️ ${esc(r.no ? "أمر " + r.no : "أمر شغل")} — ${esc(r.fault || "بدون وصف عطل")} <small class="hint">${esc(r.status || "")}${r.total ? " • " + (+r.total).toFixed(2) + " ج" : ""}</small></span></div>`;
+  if (entry.type === "customer") {
+    const c = p.customer || {};
+    const devices = p.devices || [], requests = p.requests || [];
+    return `<div class="trash-details">
+      <div class="kv"><b>👤 الاسم</b>${esc(c.name || "—")}</div>
+      <div class="kv"><b>📞 الهاتف</b>${esc(c.phone || "—")}</div>
+      <div class="kv"><b>📍 العنوان</b>${esc(typeof addressText === "function" ? addressText(c.mainAddress || {}) : "")}</div>
+      <div class="setting-subhead">🔧 الأجهزة (${devices.length})</div>
+      ${devices.length ? devices.map(d => `<div class="setting-row"><span>🔧 ${esc(d.type || "")} — ${esc(d.brand || "")}${d.model ? " (" + esc(d.model) + ")" : ""}</span></div>`).join("") : `<div class="hint">لا توجد أجهزة.</div>`}
+      <div class="setting-subhead">🛠️ أوامر الشغل (${requests.length})</div>
+      ${requests.length ? requests.map(reqRow).join("") : `<div class="hint">لا توجد أوامر شغل.</div>`}
+    </div>`;
+  }
+  if (entry.type === "device") {
+    const d = p.device || {};
+    const requests = p.requests || [];
+    const cust = typeof customerName === "function" ? customerName(d.customerId) : "—";
+    return `<div class="trash-details">
+      <div class="kv"><b>🔧 النوع / الماركة</b>${esc(d.type || "")} — ${esc(d.brand || "")}</div>
+      <div class="kv"><b>الموديل</b>${esc(d.model || "—")}</div>
+      <div class="kv"><b>👤 العميل</b>${esc(cust)}</div>
+      <div class="setting-subhead">🛠️ أوامر الشغل (${requests.length})</div>
+      ${requests.length ? requests.map(reqRow).join("") : `<div class="hint">لا توجد أوامر شغل.</div>`}
+    </div>`;
+  }
+  if (entry.type === "request") {
+    const r = p.request || {};
+    const cust = typeof customerName === "function" ? customerName(r.customerId) : "—";
+    const dev = typeof deviceName === "function" ? deviceName(r.deviceId) : "—";
+    const parts = r.parts || [];
+    return `<div class="trash-details">
+      <div class="kv"><b>🧾 رقم الأمر</b>${esc(r.no || "—")}</div>
+      <div class="kv"><b>👤 العميل</b>${esc(cust)}</div>
+      <div class="kv"><b>🔧 الجهاز</b>${esc(dev)}</div>
+      <div class="kv"><b>📝 العطل</b>${esc(r.fault || "—")}</div>
+      <div class="kv"><b>🔨 الأعمال المنفذة</b>${esc(r.work || "—")}</div>
+      <div class="kv"><b>💰 الإجمالي</b>${(+r.total || 0).toFixed(2)} ج</div>
+      <div class="kv"><b>💵 العربون</b>${(+r.deposit || 0).toFixed(2)} ج</div>
+      <div class="kv"><b>الحالة</b>${esc(r.status || "—")}</div>
+      <div class="setting-subhead">📦 قطع الغيار (${parts.length})</div>
+      ${parts.length ? parts.map(x => `<div class="setting-row"><span>📦 ${esc(x.external ? (x.name || "قطعة خارجية") : ((arr(K.p).find(z => z.id === x.partId) || {}).name || "قطعة محذوفة من المخزن"))} × ${x.qty || 0}</span></div>`).join("") : `<div class="hint">لا توجد قطع.</div>`}
+    </div>`;
+  }
+  return `<div class="hint">لا توجد تفاصيل إضافية.</div>`;
+}
+
 function renderTrash() {
   const host = document.getElementById("trashResult");
   if (!host) return;
   const rows = trashEntries();
   const icon = { customer: "👤", device: "🔧", request: "🛠️" };
+  // كل سجل بقى details قابلة للفتح لوحدها فيها كل تفاصيله (بدل ما يبان
+  // بس الاسم والتاريخ)، وله id ثابت (trash-entry-<id>) عشان سجل التغييرات
+  // الحساسة في الإعدادات يقدر يربط مباشرة للسجل المحذوف ده بالتحديد لو
+  // لسه موجود في السلة.
   host.innerHTML = rows.length
-    ? `<div class="audit-list">${rows.map(x => `<div class="setting-row"><span><b>${icon[x.type] || "🗑️"} ${esc(x.label)}</b><small class="hint">اتحذف ${esc(new Date(x.deletedAt).toLocaleString("ar-EG"))}</small></span><span class="compact-actions"><button class="secondary small-btn" type="button" data-wf-event="click" data-wf-code="restoreFromTrash('${x.id}')">↩️ استرجاع</button><button class="danger-btn small-btn" type="button" data-wf-event="click" data-wf-code="permanentlyDeleteTrash('${x.id}')">🗑️ حذف نهائي</button></span></div>`).join("")}</div>`
+    ? `<div class="audit-list">${rows.map(x => `<div class="setting-row trash-row" id="trash-entry-${x.id}"><details><summary><b>${icon[x.type] || "🗑️"} ${esc(x.label)}</b> <small class="hint">اتحذف ${esc(new Date(x.deletedAt).toLocaleString("ar-EG"))}</small></summary>${trashEntryDetailsHtml(x)}<span class="compact-actions"><button class="secondary small-btn" type="button" data-wf-event="click" data-wf-code="restoreFromTrash('${x.id}')">↩️ استرجاع</button><button class="danger-btn small-btn" type="button" data-wf-event="click" data-wf-code="permanentlyDeleteTrash('${x.id}')">🗑️ حذف نهائي</button></span></details></div>`).join("")}</div>`
     : `<div class="hint">سلة المهملات فاضية حاليًا.</div>`;
 }
 document.addEventListener("DOMContentLoaded", renderTrash);

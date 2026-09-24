@@ -107,7 +107,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
   // لازم الترحيل (migrations.js) يخلص قبل أول رندر بيقرأ حقل photo،
   // عشان ميحصلش سباق بين "لسه base64" و"بقى مرجع IndexedDB".
   if(window.runMigrations){try{await window.runMigrations()}catch(e){console.error("[app] فشل تشغيل الترحيلات",e)}}
-  settings();normalizeOrderNumbers();renderDash();monthReport();document.getElementById("reportMonth")?.addEventListener("change",financeReport);document.getElementById("reportWeek")?.addEventListener("change",financeReport);initCustomers();customerProfile();initDevices();deviceProfile();initRequests();requestProfile();initParts();partProfile();(typeof initInventoryBulk==="function")&&initInventoryBulk();initTasks();settingsPage();renderTreasury();renderWallets();renderWalletDetail();initQuickOrder();initQuickWallet();initRoutePage();initFollowupPage();initFaultCodes();faultCodeProfile()
+  settings();normalizeOrderNumbers();renderDash();monthReport();document.getElementById("reportMonth")?.addEventListener("change",financeReport);document.getElementById("reportWeek")?.addEventListener("change",financeReport);initCustomers();customerProfile();initDevices();deviceProfile();initRequests();requestProfile();initParts();partProfile();(typeof initInventoryBulk==="function")&&initInventoryBulk();initTasks();settingsPage();openSettingsPanelFromHash?.();renderTreasury();renderWallets();renderWalletDetail();initQuickOrder();initQuickWallet();initRoutePage();initFollowupPage();initFaultCodes();faultCodeProfile()
 })
 
 // Quick-create relations: create the missing entity without leaving the current workflow.

@@ -68,10 +68,50 @@ async function renderStorageUsageInfo(){
 }
 document.addEventListener("DOMContentLoaded",renderStorageUsageInfo);
 
+// سجل التغييرات الحساسة كان بيعرض entityId الخام (نص عشوائي بحروف وأرقام،
+// زي "a1b2c3d4-...") في نص كل سطر — ده اللي كان يبان "أرقام بحروف" غريبة.
+// الدالة دي بترجعه لرابط فعلي للسجل نفسه (لو لسه موجود، أو لسه في سلة
+// المهملات)، وبنستخدم x.details (اللي هو أصلاً اسم/رقم مفهوم اتسجل وقت
+// الحدث زي اسم العميل أو رقم أمر الشغل) بدل الـ ID الخام في العرض.
+function findTrashEntryByOriginalId(kind, origId) {
+  if (!origId) return null;
+  return arr(K.trash).find(t => {
+    if (kind === "customer" && t.type === "customer") return t.payload?.customer?.id === origId;
+    if (kind === "device" && t.type === "device") return t.payload?.device?.id === origId;
+    if (kind === "request" && t.type === "request") return t.payload?.request?.id === origId;
+    return false;
+  }) || null;
+}
+function auditEntryHref(entity, entityId) {
+  if (!entityId) return null;
+  if (entity === "عميل") {
+    if (arr(K.c).some(x => x.id === entityId)) return "customer.html?id=" + encodeURIComponent(entityId);
+    const t = findTrashEntryByOriginalId("customer", entityId);
+    return t ? "settings.html#trash-entry-" + encodeURIComponent(t.id) : null;
+  }
+  if (entity === "جهاز") {
+    if (arr(K.d).some(x => x.id === entityId)) return "device.html?id=" + encodeURIComponent(entityId);
+    const t = findTrashEntryByOriginalId("device", entityId);
+    return t ? "settings.html#trash-entry-" + encodeURIComponent(t.id) : null;
+  }
+  if (entity === "أمر شغل") {
+    if (arr(K.r).some(x => x.id === entityId)) return "request.html?id=" + encodeURIComponent(entityId);
+    const t = findTrashEntryByOriginalId("request", entityId);
+    return t ? "settings.html#trash-entry-" + encodeURIComponent(t.id) : null;
+  }
+  if (entity === "خزنة" || entity === "حركة خزنة") return "treasury.html";
+  if (entity === "محفظة" || entity === "حركة محفظة" || entity === "محفظة/خزنة") return "wallets.html";
+  return null;
+}
 function renderAuditLog(){
   const host=document.getElementById("auditLogResult");if(!host||typeof getAuditLog!=="function")return;
   const rows=getAuditLog().slice(0,80);
-  host.innerHTML=rows.length?`<div class="audit-list">${rows.map(x=>`<div class="setting-row"><span><b>${esc(x.action)}</b> — ${esc(x.entity)} ${esc(x.entityId)}<small class="hint">${esc(new Date(x.at).toLocaleString("ar-EG"))}${x.details?` — ${esc(x.details)}`:""}</small></span></div>`).join("")}</div>`:`<div class="hint">لا توجد تغييرات مسجلة بعد.</div>`;
+  host.innerHTML=rows.length?`<div class="audit-list">${rows.map(x=>{
+    const label=`<b>${esc(x.action)}</b> — ${esc(x.entity)}${x.details?` — ${esc(x.details)}`:""}`;
+    const timeHtml=`<small class="hint">${esc(new Date(x.at).toLocaleString("ar-EG"))}</small>`;
+    const href=auditEntryHref(x.entity,x.entityId);
+    return href?`<a class="setting-row audit-row" href="${href}"><span>${label}${timeHtml}</span></a>`:`<div class="setting-row audit-row"><span>${label}${timeHtml}</span></div>`;
+  }).join("")}</div>`:`<div class="hint">لا توجد تغييرات مسجلة بعد.</div>`;
 }
 document.addEventListener("DOMContentLoaded",renderAuditLog);
 

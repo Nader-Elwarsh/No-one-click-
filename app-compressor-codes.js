@@ -53,9 +53,24 @@
   function allBrands() { if (!brandsCache) brandsCache = Object.keys(window.COMPRESSOR_INDEX?.brands||db()).sort((a, b) => a.localeCompare(b, "ar")); return brandsCache; }
   function totalRecords(){return window.COMPRESSOR_INDEX?.total||flatRecords().length}
   function loadAllCompressorBrands(){
-    if(compressorAllReady)return Promise.resolve();if(compressorAllPromise)return compressorAllPromise;
+    if(compressorAllReady)return Promise.resolve();
+    if(compressorAllPromise)return compressorAllPromise;
     const entries=Object.values(window.COMPRESSOR_INDEX?.brands||{});
-    compressorAllPromise=Promise.all(entries.map(x=>loadScript(x.file))).then(()=>{compressorAllReady=true;recordsCache=null;brandsCache=null;searchCache.clear()});
+    // كانت بتستخدم Promise.all: أي ملف واحد من الـ58 ملف بتاع الماركات يفشل
+    // تحميله (شبكة ضعيفة، انقطاع لحظي...) كان بيفشّل التحميل كله، وبعدها
+    // compressorAllPromise فاضل معلّق على الوعد المرفوض ده للأبد، فحتى لو
+    // فتحت البحث تاني بعد كده كان بيرجّع نفس الفشل من غير أي محاولة جديدة —
+    // يعني بحث أكواد الكباسات بيتعطل نهائيًا لبقية الجلسة من أول عطل شبكة
+    // بسيط. هنا بنستخدم allSettled: لو جزء من الملفات فشل، الباقي (اللي
+    // نجح) يفضل شغال والبحث يرجع نتائج منه، وبنصفّر compressorAllPromise في
+    // الآخر عشان أي محاولة بحث جديدة تقدر تعيد تحميل اللي فشل من الأول
+    // بدل ما تفضل عالقة على فشل قديم.
+    compressorAllPromise=Promise.allSettled(entries.map(x=>loadScript(x.file))).then(results=>{
+      const failed=results.filter(r=>r.status==="rejected").length;
+      compressorAllReady=true;recordsCache=null;brandsCache=null;searchCache.clear();
+      if(failed)console.warn(`[compressor] تعذّر تحميل ${failed} من ${results.length} ملفات قاعدة الكباسات — الباقي متاح للبحث.`);
+      compressorAllPromise=null;
+    });
     return compressorAllPromise;
   }
   function loadCompressorBrand(brand){

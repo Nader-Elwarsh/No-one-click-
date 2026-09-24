@@ -33,9 +33,10 @@
     wallet: "💳 الحسابات والمحافظ",
     route: "🗺️ خط السير",
     faultcode: "🧯 أكواد الأعطال",
-    compressor: "🧊 أكواد الكباسات"
+    compressor: "🧊 أكواد الكباسات",
+    settings: "⚙️ الإعدادات"
   };
-  var CAT_ORDER = ["customer", "device", "request", "part", "task", "treasury", "wallet", "route", "faultcode", "compressor"];
+  var CAT_ORDER = ["customer", "device", "request", "part", "task", "treasury", "wallet", "route", "faultcode", "compressor", "settings"];
   var MAX_PER_GROUP = 25;
 
   function safeEsc(v) {
@@ -199,6 +200,46 @@
           href: "compcodes.html?q=" + encodeURIComponent(rec.model || "") + (item.brand ? "&brand=" + encodeURIComponent(item.brand) : "")
         });
       });
+    }
+
+    // الإعدادات: القوايم والبيانات المرجعية القابلة للتعديل من صفحة
+    // الإعدادات (مراكز وقرى، أنواع أجهزة وتصنيفاتها الفرعية، ماركات،
+    // تصنيفات مخزن، محافظ وتصنيفاتها، أنواع مصاريف، وسوم أوامر شغل،
+    // رسائل واتساب جاهزة، بنود الإيصال). كل نتيجة بتودّي لنفس القسم في
+    // settings.html وتفتحه تلقائيًا (settings.html#id بتتلقفها
+    // openSettingsPanelFromHash في app-settings.js).
+    if (typeof window.settings === "function") {
+      var st = window.settings() || {};
+      function pushSetting(text, sub, panelId) {
+        if (!text) return;
+        if (norm(text).indexOf(q) === -1) return;
+        results.push({ cat: "settings", icon: "⚙️", title: text, sub: sub || "", href: "settings.html#" + panelId });
+      }
+      (st.centers || []).forEach(function (c) { pushSetting(c, "📍 مركز", "locations"); });
+      Object.keys(st.villages || {}).forEach(function (c) {
+        (st.villages[c] || []).forEach(function (v) { pushSetting(v, "📍 قرية — " + c, "locations"); });
+      });
+      Object.keys(st.types || {}).forEach(function (t) {
+        pushSetting(t, "🔧 نوع جهاز", "device-types");
+        (st.types[t] || []).forEach(function (sub) { pushSetting(sub, "🔧 تصنيف فرعي — " + t, "device-types"); });
+      });
+      (st.brands || []).forEach(function (b) { pushSetting(b, "🏷️ ماركة", "brands"); });
+      (st.partCats || []).forEach(function (pc) { pushSetting(pc, "📦 تصنيف مخزن", "part-categories"); });
+      (st.wallets || []).forEach(function (w) { pushSetting(w, "💳 حساب / محفظة", "settings-list-wallets"); });
+      (st.walletCategories || []).forEach(function (w) { pushSetting(w, "🏷️ تصنيف محفظة", "settings-list-walletCategories"); });
+      (st.expenseCategories || []).forEach(function (e) { pushSetting(e, "🧯 نوع مصروف تشغيل", "settings-list-expenseCategories"); });
+      (st.personalExpenseCategories || []).forEach(function (e) { pushSetting(e, "🙋 نوع مصروف شخصي", "settings-list-personalExpenseCategories"); });
+      (st.units || []).forEach(function (u) { pushSetting(u, "📏 وحدة قياس", "settings-list-units"); });
+      (st.addressTypes || []).forEach(function (a) { pushSetting(a, "🏠 نوع عنوان", "settings-list-addressTypes"); });
+      (st.executionPlaces || []).forEach(function (e) { pushSetting(e, "📍 مكان تنفيذ", "settings-list-executionPlaces"); });
+      (st.orderTags || []).concat(st.orderTagsDisabled || []).forEach(function (tag) { pushSetting(tag, "🏷️ تصنيف يدوي لأمر الشغل", "order-tags-panel"); });
+      (st.waTemplates || []).forEach(function (t) {
+        var hay = norm([t.name, t.text].join(" "));
+        if (hay.indexOf(q) === -1) return;
+        results.push({ cat: "settings", icon: "📨", title: t.name || "رسالة واتساب", sub: (t.text || "").slice(0, 60), href: "settings.html#wa-templates-panel" });
+      });
+      var receiptFields = (st.receiptFields && st.receiptFields.length) ? st.receiptFields : (typeof window.defaultReceiptFields === "function" ? window.defaultReceiptFields() : []);
+      (receiptFields || []).forEach(function (f) { pushSetting(f.label, "🧾 بند إيصال", "receipt-settings-panel"); });
     }
 
     return results;

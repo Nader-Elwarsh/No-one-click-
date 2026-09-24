@@ -19,6 +19,12 @@
 .part-ac-item.ac-add-new b{color:var(--accent-text)}
 .setting-row-disabled{opacity:.6}
 .setting-subhead{font-weight:bold;font-size:13px;color:var(--text-muted);margin:12px 0 4px}
+.trash-row>details{width:100%}
+.trash-row summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}
+.trash-details{margin:8px 0;padding:8px 10px;border-radius:10px;background:var(--bg-sunken,#f2f5f8)}
+.trash-details .kv{margin-bottom:4px}
+a.audit-row{text-decoration:none;color:inherit;cursor:pointer}
+a.audit-row:hover{background:var(--bg-sunken,#f2f5f8)}
 .route-badge-visited{background:#e7f0ff;color:#1f4fa3}
 .route-badge-pending{background:#fff3cd;color:#8a6d1f}
 .route-badge-offsched{background:#fde8d7;color:#a1520c}
