@@ -4,6 +4,24 @@
 // عشان تودّي المستخدم لنفس القسم بالظبط بدل ما يدوّر يدويًا وسط كل
 // الإعدادات. بتشتغل مع أي section لها id سواء كانت ثابتة في settings.html
 // أو متولّدة ديناميكيًا هنا (زي wa-templates-panel وsettings-list-*).
+// إجبار التطبيق يجيب آخر نسخة فورًا: بيمسح كل الكاش القديم (Service
+// Worker) ويسيب التسجيل يبني كاش جديد من الصفر على أول تحميل تاني، بدل
+// ما ينتظر آلية التحديث الخلفية العادية (اللي بتاخد زيارتين لتظهر). ده
+// الحل المضمون لما تعمل تعديل وميظهرش فورًا في التطبيق على الموبايل.
+async function forceAppUpdate(){
+  if(!confirm("هيتم تحديث التطبيق وإعادة تحميل الصفحة. متابعة؟"))return;
+  try{
+    if("serviceWorker" in navigator){
+      let regs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+    }
+    if("caches" in window){
+      let keys=await caches.keys();
+      await Promise.all(keys.map(k=>caches.delete(k)));
+    }
+  }catch(e){console.warn("تعذر مسح الكاش بالكامل",e)}
+  location.reload();
+}
 function openSettingsPanelFromHash(){
   let hash=(location.hash||"").replace(/^#/,"");
   if(!hash)return;
@@ -388,6 +406,15 @@ function deleteFollowupWaTemplate(i){let s=settings();if(!s.followupWaTemplates)
 const RECEIPT_BUILTIN_FIELDS=[["orderNo","🧾 رقم الأمر"],["orderDate","📅 التاريخ"],["customerName","👤 اسم العميل"],["customerPhone","📞 رقم الهاتف"],["deviceInfo","🔧 الجهاز"],["fault","📝 العطل"],["work","🔨 الأعمال المنفذة"],["partsList","🧰 قطع الغيار"],["labor","🔨 المصنعية"],["partsTotal","🔧 إجمالي قطع الغيار"],["total","💰 الإجمالي"],["deposit","💵 العربون"],["remaining","💳 المتبقي"],["paymentStatus","💳 حالة الدفع"]];
 function defaultReceiptFields(){return RECEIPT_BUILTIN_FIELDS.map(([fid,label])=>({id:fid,label,enabled:true,builtin:true}))}
 function ensureReceiptFields(s){if(!s.receiptFields||!s.receiptFields.length)s.receiptFields=defaultReceiptFields();return s.receiptFields}
+// معاينة حيّة تحت خانة "اسم الورشة" في الإعدادات — بتتحدّث مع كل حرف تكتبه
+// (مش بس بعد الحفظ)، بنفس منطق العرض في الإيصال بالظبط (trim + رجوع
+// للاسم الافتراضي لو فاضي). الهدف إثبات الشكل النهائي فورًا وبشكل مباشر،
+// من غير أي احتمال لبس بسبب كاش أو صفحة تانية.
+function previewReceiptWorkshopName(){
+  let out=document.getElementById("receiptWorkshopNamePreview");
+  if(!out)return;
+  out.textContent=(this.value||"").trim()||"الورشة الفنية";
+}
 function receiptSettingHtml(){
   let s=settings();
   let info=s.receiptInfo||{};
@@ -395,11 +422,12 @@ function receiptSettingHtml(){
   return `<section class="panel setting-list-panel" id="receipt-settings-panel"><details><summary>🧾 إعدادات الإيصال</summary><div class="panel-body">
     <div class="hint">البيانات دي بتظهر أعلى وأسفل أي إيصال تطبعه أو تشاركه من صفحة أمر الشغل.</div>
     <div class="form-grid">
-      <label>اسم الورشة<input type="text" value="${esc(info.name||"")}" data-wf-event="change" data-wf-code="setReceiptInfo('name',this.value)"></label>
+      <label>اسم الورشة<input type="text" id="receiptInfoNameInput" value="${esc(info.name||"")}" data-wf-event="change" data-wf-code="setReceiptInfo('name',this.value)" data-wf-input="previewReceiptWorkshopName"></label>
       <label>رقم الهاتف<input type="text" value="${esc(info.phone||"")}" data-wf-event="change" data-wf-code="setReceiptInfo('phone',this.value)"></label>
       <label class="wide">العنوان<input type="text" value="${esc(info.address||"")}" data-wf-event="change" data-wf-code="setReceiptInfo('address',this.value)"></label>
       <label class="wide">نص ثابت / توقيع (يُستخدم أسفل الإيصال، ومتاح كمان كـ {التوقيع} في أي رسالة واتساب)<input type="text" value="${esc(info.footer||"")}" data-wf-event="change" data-wf-code="setReceiptInfo('footer',this.value)"></label>
     </div>
+    <div class="hint">هيظهر في رأس أي إيصال بالظبط كده: <b id="receiptWorkshopNamePreview">${esc((info.name||"").trim()||"الورشة الفنية")}</b></div>
     <div class="hint">فعّل/عطّل أي بند، رتّبه بالأسهم، وعدّل تسميته زي ما تحب. تقدر كمان تضيف بنود مخصصة (نص ثابت بيظهر في كل إيصال، زي "الضمان 3 شهور").</div>
     <div class="page-head-actions"><button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="addReceiptCustomField()">➕ إضافة بند مخصص</button></div>
     <div id="receiptFieldsList">${receiptFieldsRowsHtml(fields)}</div>

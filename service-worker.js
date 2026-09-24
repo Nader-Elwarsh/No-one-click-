@@ -1,4 +1,4 @@
-const CACHE_NAME = "workshop-v11-125-outside-edit-logo";
+const CACHE_NAME = "workshop-v11-126-wa-direct-receipt";
 importScripts("./notif-shared.js");
 importScripts("./share-store.js");
 const CORE_FILES = [
