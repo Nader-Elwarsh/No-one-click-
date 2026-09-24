@@ -376,10 +376,37 @@ function initRoutePage(){
 }
 
 // متابعة العملاء الساكتين: عملاء عندهم أمر شغل سابق ومفيش أمر جديد من مدة معينة.
+// نفس فكرة fillWaTemplate بتاعة أمر الشغل بالظبط، لكن هنا مفيش أمر شغل
+// محدد — بس عميل + إحصائية بسيطة عن آخر تعامل معاه (مستخدمة في صفحة
+// متابعة العملاء لتذكير العملاء الساكتين من فترة).
+function fillFollowupTemplate(text,x){
+  let info=settings().receiptInfo||{};
+  let map={
+    "اسم_العميل": x.c.name||"",
+    "عدد_الأيام": String(x.daysSince??""),
+    "عدد_الأوامر": String(x.ordersCount??""),
+    "تاريخ_آخر_أمر": x.last?new Date(x.last).toLocaleDateString("ar-EG"):"",
+    "اسم_الورشة": (info.name||"").trim()||"الورشة الفنية",
+    "التوقيع": (info.footer||"").trim()
+  };
+  return String(text||"").replace(/\{([^}]+)\}/g,(m,k)=>map[k]!==undefined?map[k]:m);
+}
+function sendFollowupTemplate(customerId,tplIndex){
+  let c=arr(K.c).find(x=>x.id===customerId);if(!c)return;
+  let wa=typeof waNumber==="function"?waNumber(c.phone):"";
+  if(!wa)return alert("لا يوجد رقم هاتف مسجل لهذا العميل.");
+  let tpl=(settings().followupWaTemplates||[])[tplIndex];if(!tpl)return;
+  let orders=arr(K.r).filter(o=>o.customerId===c.id);
+  let last=orders.reduce((a,o)=>{let d=o.createdAt||"";return d>a?d:a},"");
+  let daysSince=last?Math.floor((new Date()-new Date(last))/86400000):null;
+  let msg=fillFollowupTemplate(tpl.text,{c,ordersCount:orders.length,last,daysSince});
+  window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`,"_blank","noopener");
+}
 function renderFollowup(){
   let el=document.getElementById("followupList");if(!el)return;
   let days=+(document.getElementById("followupDays")?.value||60);
   let now=new Date();
+  let templates=(settings().followupWaTemplates||[]).map((t,i)=>({...t,i})).filter(t=>t.enabled!==false);
   let rows=arr(K.c).map(cu=>{
     let orders=arr(K.r).filter(x=>x.customerId===cu.id);
     let last=orders.reduce((a,x)=>{let d=x.createdAt||"";return d>a?d:a},"");
@@ -387,7 +414,10 @@ function renderFollowup(){
     return {c:cu,ordersCount:orders.length,last,daysSince};
   }).filter(x=>x.ordersCount>0&&x.daysSince!==null&&x.daysSince>=days);
   rows.sort((a,b)=>b.daysSince-a.daysSince);
-  el.innerHTML=rows.length?rows.map(x=>`<div class="item record-card"><div class="item-head"><a href="customer.html?id=${x.c.id}"><b>👤 ${esc(x.c.name)}</b></a><span class="badge">⏳ ${x.daysSince} يوم</span></div><div>${contactLinksHtml(x.c.phone)}</div><div>📍 ${esc(addressText(x.c.mainAddress||{}))}</div><div>🛠️ ${x.ordersCount} أمر سابق • آخر أمر ${new Date(x.last).toLocaleDateString("ar-EG")}</div><div class="actions"><a class="primary small-btn" href="requests.html?customer=${x.c.id}&add=1">➕ أمر شغل جديد</a></div></div>`).join(""):'<div class="item">لا يوجد عملاء ساكتين ضمن المدة المختارة 🎉</div>';
+  el.innerHTML=rows.length?rows.map(x=>{
+    let waRow=(templates.length&&x.c.phone)?`<div class="wa-send-row">${templates.map(t=>`<button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="sendFollowupTemplate('${x.c.id}',${t.i})">💬 ${esc(t.name||"رسالة")}</button>`).join("")}</div>`:"";
+    return `<div class="item record-card"><div class="item-head"><a href="customer.html?id=${x.c.id}"><b>👤 ${esc(x.c.name)}</b></a><span class="badge">⏳ ${x.daysSince} يوم</span></div><div>${contactLinksHtml(x.c.phone)}</div><div>📍 ${esc(addressText(x.c.mainAddress||{}))}</div><div>🛠️ ${x.ordersCount} أمر سابق • آخر أمر ${new Date(x.last).toLocaleDateString("ar-EG")}</div>${waRow}<div class="actions"><a class="primary small-btn" href="requests.html?customer=${x.c.id}&add=1">➕ أمر شغل جديد</a></div></div>`;
+  }).join(""):'<div class="item">لا يوجد عملاء ساكتين ضمن المدة المختارة 🎉</div>';
 }
 function initFollowupPage(){
   let dEl=document.getElementById("followupDays");if(!dEl)return;

@@ -25,6 +25,8 @@
 .trash-details .kv{margin-bottom:4px}
 a.audit-row{text-decoration:none;color:inherit;cursor:pointer}
 a.audit-row:hover{background:var(--bg-sunken,#f2f5f8)}
+@keyframes hashHighlightPulse{0%{background:rgba(255,193,7,.55)}100%{background:transparent}}
+.hash-highlight{animation:hashHighlightPulse 2.2s ease-out;border-radius:10px}
 .route-badge-visited{background:#e7f0ff;color:#1f4fa3}
 .route-badge-pending{background:#fff3cd;color:#8a6d1f}
 .route-badge-offsched{background:#fde8d7;color:#a1520c}
@@ -200,6 +202,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 @media (max-width:600px){#installAppBtn{font-size:.86rem;padding:9px 12px}.brand h1{font-size:1.45rem}.brand p{font-size:.9rem}}
 
 .inline-status{border:1px solid var(--border);border-radius:8px;padding:4px 8px;background:var(--bg-elevated);font:inherit;max-width:180px}
+.inline-status-wide{border:1px solid var(--border);border-radius:8px;padding:4px 8px;background:var(--bg-elevated);font:inherit;width:100%;max-width:none;resize:vertical}
 
 
 /* =========================================================

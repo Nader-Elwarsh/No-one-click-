@@ -17,7 +17,11 @@ function openSettingsPanelFromHash(){
   if(inner)inner.open=true;
   let el=target;
   while(el){ if(el.tagName==="DETAILS")el.open=true; el=el.parentElement; }
-  requestAnimationFrame(()=>target.scrollIntoView({behavior:"smooth",block:"start"}));
+  requestAnimationFrame(()=>{
+    target.scrollIntoView({behavior:"smooth",block:"center"});
+    target.classList.add("hash-highlight");
+    setTimeout(()=>target.classList.remove("hash-highlight"),2200);
+  });
 }
 if(typeof window!=="undefined")window.addEventListener("hashchange",()=>openSettingsPanelFromHash());
 function listEditorHtml(title,key,icon){
@@ -93,7 +97,7 @@ function settingsPage(){
   brandSettings.innerHTML=s.brands.map((b,i)=>`<div class="setting-row drag-item" draggable="true" data-drag-kind="brands" data-drag-index="${i}"><span class="drag-handle" title="سحب للترتيب">☷</span><span class="setting-name"><b>${i+1}. ${esc(b)}</b></span><span class="compact-actions"><input class="order-number" type="number" min="1" max="${s.brands.length}" value="${i+1}" title="رقم الترتيب" data-wf-event="change" data-wf-code="setListPosition('brands',${i},this.value)"><button class="secondary mini-action" data-wf-event="click" data-wf-code="renameBrand('${escAttr(b)}')">✏️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="deleteBrand('${escAttr(b)}')">🗑️</button></span></div>`).join("");
   partCategorySettings.innerHTML=s.partCats.map((b,i)=>`<div class="setting-row drag-item" draggable="true" data-drag-kind="partCats" data-drag-index="${i}"><span class="drag-handle" title="سحب للترتيب">☷</span><span class="setting-name"><b>${i+1}. ${esc(b)}</b></span><span class="compact-actions"><input class="order-number" type="number" min="1" max="${s.partCats.length}" value="${i+1}" title="رقم الترتيب" data-wf-event="change" data-wf-code="setListPosition('partCats',${i},this.value)"><button class="secondary mini-action" data-wf-event="click" data-wf-code="renamePartCategory('${escAttr(b)}')">✏️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="deletePartCategory('${escAttr(b)}')">🗑️</button></span></div>`).join("");
   let host=document.getElementById("settingsDynamic");
-  if(host)host.innerHTML=`<section class="panel setting-list-panel"><details><summary>🛠️ دورة حالات أمر الشغل</summary><div class="panel-body"><div class="hint">الحالات (جديد / جاري التنفيذ / مكتمل / ملغي) وحالات الورشة (غير مطلوب / تم السحب / تم التسليم) بقت دورة معتمدة وثابتة، ومش قابلة للتعديل من هنا. الأولوية اتشالت خالص من أوامر الشغل. راجع ملف WORK_ORDER_LIFECYCLE_APPROVED.md لتفاصيل الدورة والانتقالات المسموحة.</div></div></details></section>`+returnWindowSettingHtml()+overdueAlertSettingHtml()+orderTagsSettingHtml()+[["أماكن التنفيذ","executionPlaces","📍"],["حالات الدفع","paymentStatuses","💳"],["وحدات القياس","units","📏"],["أنواع العناوين","addressTypes","🏠"]].map(x=>listEditorHtml(...x)).join("")+waTemplatesSettingHtml()+receiptSettingHtml();
+  if(host)host.innerHTML=`<section class="panel setting-list-panel"><details><summary>🛠️ دورة حالات أمر الشغل</summary><div class="panel-body"><div class="hint">الحالات (جديد / جاري التنفيذ / مكتمل / ملغي) وحالات الورشة (غير مطلوب / تم السحب / تم التسليم) بقت دورة معتمدة وثابتة، ومش قابلة للتعديل من هنا. الأولوية اتشالت خالص من أوامر الشغل. راجع ملف WORK_ORDER_LIFECYCLE_APPROVED.md لتفاصيل الدورة والانتقالات المسموحة.</div></div></details></section>`+returnWindowSettingHtml()+overdueAlertSettingHtml()+orderTagsSettingHtml()+[["أماكن التنفيذ","executionPlaces","📍"],["حالات الدفع","paymentStatuses","💳"],["وحدات القياس","units","📏"],["أنواع العناوين","addressTypes","🏠"]].map(x=>listEditorHtml(...x)).join("")+waTemplatesSettingHtml()+followupWaTemplatesSettingHtml()+receiptSettingHtml();
   let walletHost=document.getElementById("walletSettingsDynamic");
   if(walletHost)walletHost.innerHTML=defaultWalletSettingHtml()+[["الحسابات (محفظتي الشخصية، فودافون كاش، أورنج كاش، إنستاباي... أضف أي حساب تحب)","wallets","💳"],["التصنيف (شخصي / تشغيل / تحصيل عميل / سلفة تحويل / أخرى...)","walletCategories","🏷️"]].map(x=>inlineListEditorHtml(...x)).join("")+[["نوع المصروف — لما التصنيف \"مصروف تشغيل\" (وقود، صيانة عدة...)","expenseCategories","🧯"],["نوع المصروف — لما التصنيف \"مصروف شخصي\" (مواصلات، أكل وشرب...)","personalExpenseCategories","🙋"]].map(x=>listEditorHtml(...x)).join("")+walletCapsSettingHtml();
   let pinHost=document.getElementById("pinLockSettings");
@@ -319,7 +323,7 @@ function moveInlineListItem(key,i,dir){
 function waTemplatesSettingHtml(){
   let list=settings().waTemplates||[];
   return `<section class="panel setting-list-panel" id="wa-templates-panel"><details><summary>📨 رسائل واتساب للعملاء</summary><div class="panel-body">
-    <div class="hint">اكتب أي عدد من الرسائل، واستخدم أي من الكلمات دي وهتتبدل تلقائيًا وقت الإرسال ببيانات أمر الشغل: {اسم_العميل} {اسم_الجهاز} {رقم_الأمر} {الحالة} {العطل} {الإجمالي} {المتبقي} {اسم_الورشة}. الرسائل المفعّلة بس هي اللي هتظهر كأزرار إرسال جوه صفحة أمر الشغل.</div>
+    <div class="hint">اكتب أي عدد من الرسائل، واستخدم أي من الكلمات دي وهتتبدل تلقائيًا وقت الإرسال ببيانات أمر الشغل: {اسم_العميل} {اسم_الجهاز} {رقم_الأمر} {الحالة} {العطل} {الإجمالي} {المتبقي} {اسم_الورشة} {التوقيع}. الرسائل المفعّلة بس هي اللي هتظهر كأزرار إرسال جوه صفحة أمر الشغل.</div>
     <div class="page-head-actions"><button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="addWaTemplate()">➕ إضافة رسالة</button></div>
     <div id="waTemplatesList">${waTemplatesRowsHtml(list)}</div>
   </div></details></section>`;
@@ -346,6 +350,40 @@ function setWaTemplateText(i,val){let s=settings();if(!s.waTemplates?.[i])return
 function setWaTemplateEnabled(i,val){let s=settings();if(!s.waTemplates?.[i])return;s.waTemplates[i].enabled=!!val;saveJSONSafe(K.s,s)}
 function deleteWaTemplate(i){let s=settings();if(!s.waTemplates)return;s.waTemplates.splice(i,1);if(!saveJSONSafe(K.s,s))return;refreshWaTemplatesList()}
 
+// ===== رسائل واتساب جاهزة لمتابعة العملاء (صفحة "متابعة العملاء") =====
+// نفس الفكرة بالظبط بتاعة رسائل أوامر الشغل فوق، لكن قايمة منفصلة لأن
+// السياق مختلف: هنا مفيش أمر شغل محدد، بس عميل + تاريخ آخر تعامل، فالكلمات
+// المتاحة للاستبدال مختلفة.
+function followupWaTemplatesSettingHtml(){
+  let list=settings().followupWaTemplates||[];
+  return `<section class="panel setting-list-panel" id="followup-wa-templates-panel"><details><summary>📨 رسائل واتساب لمتابعة العملاء</summary><div class="panel-body">
+    <div class="hint">اكتب أي عدد من الرسائل لتذكير العملاء اللي ساكتين من فترة، واستخدم أي من الكلمات دي وهتتبدل تلقائيًا وقت الإرسال: {اسم_العميل} {عدد_الأيام} {عدد_الأوامر} {تاريخ_آخر_أمر} {اسم_الورشة} {التوقيع}. الرسائل المفعّلة بس هي اللي هتظهر كأزرار إرسال جوه صفحة متابعة العملاء.</div>
+    <div class="page-head-actions"><button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="addFollowupWaTemplate()">➕ إضافة رسالة</button></div>
+    <div id="followupWaTemplatesList">${followupWaTemplatesRowsHtml(list)}</div>
+  </div></details></section>`;
+}
+function followupWaTemplatesRowsHtml(list){
+  if(!list.length)return `<div class="hint">لا توجد رسائل مضافة بعد.</div>`;
+  return list.map((t,i)=>`<div class="wa-template-row">
+    <div class="wa-template-head">
+      <label class="toggle-inline"><input type="checkbox" ${t.enabled!==false?"checked":""} data-wf-event="change" data-wf-code="setFollowupWaTemplateEnabled(${i},this.checked)"> مفعّلة</label>
+      <input type="text" class="inline-edit-input wa-template-name" value="${esc(t.name||"")}" placeholder="اسم الرسالة (للتعرّف عليها بس)" data-wf-event="change" data-wf-code="renameFollowupWaTemplate(${i},this.value)">
+      <button type="button" class="danger-btn mini-action" data-wf-event="click" data-wf-code="confirmClick(this,()=>deleteFollowupWaTemplate(${i}))">🗑️</button>
+    </div>
+    <textarea rows="4" class="wa-template-text" placeholder="نص الرسالة" data-wf-event="change" data-wf-code="setFollowupWaTemplateText(${i},this.value)">${esc(t.text||"")}</textarea>
+  </div>`).join("");
+}
+function refreshFollowupWaTemplatesList(){let h=document.getElementById("followupWaTemplatesList");if(h)h.innerHTML=followupWaTemplatesRowsHtml(settings().followupWaTemplates||[])}
+function addFollowupWaTemplate(){
+  let s=settings();s.followupWaTemplates=s.followupWaTemplates||[];
+  s.followupWaTemplates.push({id:id(),name:"رسالة جديدة",text:"مرحباً {اسم_العميل}، بنشتاق نطمن عليك وعلى الجهاز، من زمان معملناش صيانة من {عدد_الأيام} يوم. لو محتاج أي حاجة إحنا موجودين. {التوقيع}",enabled:true});
+  if(!saveJSONSafe(K.s,s))return;refreshFollowupWaTemplatesList();
+}
+function renameFollowupWaTemplate(i,val){let s=settings();if(!s.followupWaTemplates?.[i])return;s.followupWaTemplates[i].name=val;saveJSONSafe(K.s,s)}
+function setFollowupWaTemplateText(i,val){let s=settings();if(!s.followupWaTemplates?.[i])return;s.followupWaTemplates[i].text=val;saveJSONSafe(K.s,s)}
+function setFollowupWaTemplateEnabled(i,val){let s=settings();if(!s.followupWaTemplates?.[i])return;s.followupWaTemplates[i].enabled=!!val;saveJSONSafe(K.s,s)}
+function deleteFollowupWaTemplate(i){let s=settings();if(!s.followupWaTemplates)return;s.followupWaTemplates.splice(i,1);if(!saveJSONSafe(K.s,s))return;refreshFollowupWaTemplatesList()}
+
 // ===== إعدادات الإيصال القابل للطباعة/المشاركة =====
 const RECEIPT_BUILTIN_FIELDS=[["orderNo","🧾 رقم الأمر"],["orderDate","📅 التاريخ"],["customerName","👤 اسم العميل"],["customerPhone","📞 رقم الهاتف"],["deviceInfo","🔧 الجهاز"],["fault","📝 العطل"],["work","🔨 الأعمال المنفذة"],["partsList","🧰 قطع الغيار"],["labor","🔨 المصنعية"],["partsTotal","🔧 إجمالي قطع الغيار"],["total","💰 الإجمالي"],["deposit","💵 العربون"],["remaining","💳 المتبقي"],["paymentStatus","💳 حالة الدفع"]];
 function defaultReceiptFields(){return RECEIPT_BUILTIN_FIELDS.map(([fid,label])=>({id:fid,label,enabled:true,builtin:true}))}
@@ -360,7 +398,7 @@ function receiptSettingHtml(){
       <label>اسم الورشة<input type="text" value="${esc(info.name||"")}" data-wf-event="change" data-wf-code="setReceiptInfo('name',this.value)"></label>
       <label>رقم الهاتف<input type="text" value="${esc(info.phone||"")}" data-wf-event="change" data-wf-code="setReceiptInfo('phone',this.value)"></label>
       <label class="wide">العنوان<input type="text" value="${esc(info.address||"")}" data-wf-event="change" data-wf-code="setReceiptInfo('address',this.value)"></label>
-      <label class="wide">ملاحظة أسفل الإيصال<input type="text" value="${esc(info.footer||"")}" data-wf-event="change" data-wf-code="setReceiptInfo('footer',this.value)"></label>
+      <label class="wide">نص ثابت / توقيع (يُستخدم أسفل الإيصال، ومتاح كمان كـ {التوقيع} في أي رسالة واتساب)<input type="text" value="${esc(info.footer||"")}" data-wf-event="change" data-wf-code="setReceiptInfo('footer',this.value)"></label>
     </div>
     <div class="hint">فعّل/عطّل أي بند، رتّبه بالأسهم، وعدّل تسميته زي ما تحب. تقدر كمان تضيف بنود مخصصة (نص ثابت بيظهر في كل إيصال، زي "الضمان 3 شهور").</div>
     <div class="page-head-actions"><button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="addReceiptCustomField()">➕ إضافة بند مخصص</button></div>
@@ -380,7 +418,15 @@ function receiptFieldsRowsHtml(fields){
   </div>`).join("");
 }
 function refreshReceiptFieldsList(){let h=document.getElementById("receiptFieldsList");if(h)h.innerHTML=receiptFieldsRowsHtml(ensureReceiptFields(settings()))}
-function setReceiptInfo(key,val){let s=settings();s.receiptInfo=s.receiptInfo||{};s.receiptInfo[key]=val;saveJSONSafe(K.s,s)}
+// كانت بتتحفظ زي ما هي من غير trim: لوحة مفاتيح الموبايل (خصوصًا مع
+// اقتراحات الكتابة بالعربي) بتضيف مسافة فاضية بعد الكلمة أحيانًا. لو
+// المستخدم كتب حرف واتمسح وفضلت مسافة لوحدها، أو حتى مسافة بعد الاسم،
+// كانت القيمة المخزنة تبقى مثلاً " " — وده نص "موجود" (truthy) لكن مفيش
+// فيه حروف تتشاف، فكان بيظهر في الإيصال كعنوان فاضي بدل ما يرجع
+// للاسم الافتراضي "الورشة الفنية" (لأن الشرط `info.name||"..."` بيشتغل
+// بس لو القيمة "" بالظبط). هنا بنعمل trim وقت الحفظ نفسه عشان القيمة
+// المخزنة تبقى نضيفة من الأساس.
+function setReceiptInfo(key,val){let s=settings();s.receiptInfo=s.receiptInfo||{};s.receiptInfo[key]=String(val??"").trim();saveJSONSafe(K.s,s)}
 function setReceiptFieldEnabled(i,val){let s=settings(),f=ensureReceiptFields(s);if(!f[i])return;f[i].enabled=!!val;saveJSONSafe(K.s,s)}
 function renameReceiptField(i,val){let s=settings(),f=ensureReceiptFields(s);if(!f[i])return;f[i].label=val;saveJSONSafe(K.s,s)}
 function setReceiptFieldText(i,val){let s=settings(),f=ensureReceiptFields(s);if(!f[i])return;f[i].staticText=val;saveJSONSafe(K.s,s)}

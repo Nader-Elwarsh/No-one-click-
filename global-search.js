@@ -238,6 +238,11 @@
         if (hay.indexOf(q) === -1) return;
         results.push({ cat: "settings", icon: "📨", title: t.name || "رسالة واتساب", sub: (t.text || "").slice(0, 60), href: "settings.html#wa-templates-panel" });
       });
+      (st.followupWaTemplates || []).forEach(function (t) {
+        var hay = norm([t.name, t.text].join(" "));
+        if (hay.indexOf(q) === -1) return;
+        results.push({ cat: "settings", icon: "📨", title: t.name || "رسالة متابعة", sub: (t.text || "").slice(0, 60), href: "settings.html#followup-wa-templates-panel" });
+      });
       var receiptFields = (st.receiptFields && st.receiptFields.length) ? st.receiptFields : (typeof window.defaultReceiptFields === "function" ? window.defaultReceiptFields() : []);
       (receiptFields || []).forEach(function (f) { pushSetting(f.label, "🧾 بند إيصال", "receipt-settings-panel"); });
     }

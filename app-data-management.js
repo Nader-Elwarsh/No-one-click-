@@ -99,8 +99,27 @@ function auditEntryHref(entity, entityId) {
     const t = findTrashEntryByOriginalId("request", entityId);
     return t ? "settings.html#trash-entry-" + encodeURIComponent(t.id) : null;
   }
-  if (entity === "خزنة" || entity === "حركة خزنة") return "treasury.html";
-  if (entity === "محفظة" || entity === "حركة محفظة" || entity === "محفظة/خزنة") return "wallets.html";
+  // خزنة/محفظة: بدل ما نودّي المستخدم لصفحة الحسابات العامة بس (من غير
+  // ما يعرف هي أنهي حركة بالظبط)، بندوّر على الحركة نفسها بالـ id
+  // المسجّل وقت الحدث ونربط بالسطر بتاعها مباشرة (treasury.html#tx-<id>
+  // أو wallet.html?...#tx-<id>) لو لسه موجودة ومش متمسوحة.
+  if (entity === "خزنة") {
+    const tx = arr(K.tr).find(x => x.id === entityId && !x.deleted);
+    return tx ? "treasury.html#tx-" + encodeURIComponent(tx.id) : "treasury.html";
+  }
+  if (entity === "حركة خزنة") return null; // الحركة اتمسحت فعلًا، مفيش سطر نودّيه عليه
+  if (entity === "محفظة") {
+    const tx = arr(K.wtx).find(x => x.id === entityId && !x.deleted);
+    return tx ? "wallet.html?type=wallet&name=" + encodeURIComponent(tx.wallet) + "#tx-" + encodeURIComponent(tx.id) : "wallets.html";
+  }
+  if (entity === "حركة محفظة") return null; // الحركة اتمسحت فعلًا
+  if (entity === "محفظة/خزنة") {
+    const wtx = arr(K.wtx).find(x => x.transferId === entityId && !x.deleted);
+    if (wtx) return "wallet.html?type=wallet&name=" + encodeURIComponent(wtx.wallet) + "#tx-" + encodeURIComponent(wtx.id);
+    const trx = arr(K.tr).find(x => x.transferId === entityId && !x.deleted);
+    if (trx) return "treasury.html#tx-" + encodeURIComponent(trx.id);
+    return null;
+  }
   return null;
 }
 function renderAuditLog(){
