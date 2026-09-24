@@ -115,7 +115,7 @@ function settingsPage(){
   brandSettings.innerHTML=s.brands.map((b,i)=>`<div class="setting-row drag-item" draggable="true" data-drag-kind="brands" data-drag-index="${i}"><span class="drag-handle" title="سحب للترتيب">☷</span><span class="setting-name"><b>${i+1}. ${esc(b)}</b></span><span class="compact-actions"><input class="order-number" type="number" min="1" max="${s.brands.length}" value="${i+1}" title="رقم الترتيب" data-wf-event="change" data-wf-code="setListPosition('brands',${i},this.value)"><button class="secondary mini-action" data-wf-event="click" data-wf-code="renameBrand('${escAttr(b)}')">✏️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="deleteBrand('${escAttr(b)}')">🗑️</button></span></div>`).join("");
   partCategorySettings.innerHTML=s.partCats.map((b,i)=>`<div class="setting-row drag-item" draggable="true" data-drag-kind="partCats" data-drag-index="${i}"><span class="drag-handle" title="سحب للترتيب">☷</span><span class="setting-name"><b>${i+1}. ${esc(b)}</b></span><span class="compact-actions"><input class="order-number" type="number" min="1" max="${s.partCats.length}" value="${i+1}" title="رقم الترتيب" data-wf-event="change" data-wf-code="setListPosition('partCats',${i},this.value)"><button class="secondary mini-action" data-wf-event="click" data-wf-code="renamePartCategory('${escAttr(b)}')">✏️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="deletePartCategory('${escAttr(b)}')">🗑️</button></span></div>`).join("");
   let host=document.getElementById("settingsDynamic");
-  if(host)host.innerHTML=`<section class="panel setting-list-panel"><details><summary>🛠️ دورة حالات أمر الشغل</summary><div class="panel-body"><div class="hint">الحالات (جديد / جاري التنفيذ / مكتمل / ملغي) وحالات الورشة (غير مطلوب / تم السحب / تم التسليم) بقت دورة معتمدة وثابتة، ومش قابلة للتعديل من هنا. الأولوية اتشالت خالص من أوامر الشغل. راجع ملف WORK_ORDER_LIFECYCLE_APPROVED.md لتفاصيل الدورة والانتقالات المسموحة.</div></div></details></section>`+returnWindowSettingHtml()+overdueAlertSettingHtml()+orderTagsSettingHtml()+[["أماكن التنفيذ","executionPlaces","📍"],["حالات الدفع","paymentStatuses","💳"],["وحدات القياس","units","📏"],["أنواع العناوين","addressTypes","🏠"]].map(x=>listEditorHtml(...x)).join("")+waTemplatesSettingHtml()+followupWaTemplatesSettingHtml()+receiptSettingHtml();
+  if(host)host.innerHTML=`<section class="panel setting-list-panel"><details><summary>🛠️ دورة حالات أمر الشغل</summary><div class="panel-body"><div class="hint">الحالات (جديد / جاري التنفيذ / مكتمل / ملغي) وحالات الورشة (غير مطلوب / تم السحب / تم التسليم) بقت دورة معتمدة وثابتة، ومش قابلة للتعديل من هنا. الأولوية اتشالت خالص من أوامر الشغل. راجع ملف WORK_ORDER_LIFECYCLE_APPROVED.md لتفاصيل الدورة والانتقالات المسموحة.</div></div></details></section>`+returnWindowSettingHtml()+overdueAlertSettingHtml()+orderTagsSettingHtml()+[["أماكن التنفيذ","executionPlaces","📍"],["حالات الدفع","paymentStatuses","💳"],["وحدات القياس","units","📏"],["أنواع العناوين","addressTypes","🏠"]].map(x=>listEditorHtml(...x)).join("")+waTemplatesSettingHtml()+followupWaTemplatesSettingHtml()+warrantySettingHtml()+receiptSettingHtml();
   let walletHost=document.getElementById("walletSettingsDynamic");
   if(walletHost)walletHost.innerHTML=defaultWalletSettingHtml()+[["الحسابات (محفظتي الشخصية، فودافون كاش، أورنج كاش، إنستاباي... أضف أي حساب تحب)","wallets","💳"],["التصنيف (شخصي / تشغيل / تحصيل عميل / سلفة تحويل / أخرى...)","walletCategories","🏷️"]].map(x=>inlineListEditorHtml(...x)).join("")+[["نوع المصروف — لما التصنيف \"مصروف تشغيل\" (وقود، صيانة عدة...)","expenseCategories","🧯"],["نوع المصروف — لما التصنيف \"مصروف شخصي\" (مواصلات، أكل وشرب...)","personalExpenseCategories","🙋"]].map(x=>listEditorHtml(...x)).join("")+walletCapsSettingHtml();
   let pinHost=document.getElementById("pinLockSettings");
@@ -341,7 +341,7 @@ function moveInlineListItem(key,i,dir){
 function waTemplatesSettingHtml(){
   let list=settings().waTemplates||[];
   return `<section class="panel setting-list-panel" id="wa-templates-panel"><details><summary>📨 رسائل واتساب للعملاء</summary><div class="panel-body">
-    <div class="hint">اكتب أي عدد من الرسائل، واستخدم أي من الكلمات دي وهتتبدل تلقائيًا وقت الإرسال ببيانات أمر الشغل: {اسم_العميل} {اسم_الجهاز} {رقم_الأمر} {الحالة} {العطل} {الإجمالي} {المتبقي} {اسم_الورشة} {التوقيع}. الرسائل المفعّلة بس هي اللي هتظهر كأزرار إرسال جوه صفحة أمر الشغل.</div>
+    <div class="hint">اكتب أي عدد من الرسائل، واستخدم أي من الكلمات دي وهتتبدل تلقائيًا وقت الإرسال ببيانات أمر الشغل: {اسم_العميل} {اسم_الجهاز} {رقم_الأمر} {الحالة} {العطل} {الإجمالي} {المتبقي} {اسم_الورشة} {التوقيع} {شروط_الضمان}. الرسائل المفعّلة بس هي اللي هتظهر كأزرار إرسال جوه صفحة أمر الشغل.</div>
     <div class="page-head-actions"><button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="addWaTemplate()">➕ إضافة رسالة</button></div>
     <div id="waTemplatesList">${waTemplatesRowsHtml(list)}</div>
   </div></details></section>`;
@@ -403,9 +403,36 @@ function setFollowupWaTemplateEnabled(i,val){let s=settings();if(!s.followupWaTe
 function deleteFollowupWaTemplate(i){let s=settings();if(!s.followupWaTemplates)return;s.followupWaTemplates.splice(i,1);if(!saveJSONSafe(K.s,s))return;refreshFollowupWaTemplatesList()}
 
 // ===== إعدادات الإيصال القابل للطباعة/المشاركة =====
-const RECEIPT_BUILTIN_FIELDS=[["orderNo","🧾 رقم الأمر"],["orderDate","📅 التاريخ"],["customerName","👤 اسم العميل"],["customerPhone","📞 رقم الهاتف"],["deviceInfo","🔧 الجهاز"],["fault","📝 العطل"],["work","🔨 الأعمال المنفذة"],["partsList","🧰 قطع الغيار"],["labor","🔨 المصنعية"],["partsTotal","🔧 إجمالي قطع الغيار"],["total","💰 الإجمالي"],["deposit","💵 العربون"],["remaining","💳 المتبقي"],["paymentStatus","💳 حالة الدفع"]];
+const RECEIPT_BUILTIN_FIELDS=[["orderNo","🧾 رقم الأمر"],["orderDate","📅 التاريخ"],["customerName","👤 اسم العميل"],["customerPhone","📞 رقم الهاتف"],["deviceInfo","🔧 الجهاز"],["fault","📝 العطل"],["work","🔨 الأعمال المنفذة"],["partsList","🧰 قطع الغيار"],["labor","🔨 المصنعية"],["partsTotal","🔧 إجمالي قطع الغيار"],["total","💰 الإجمالي"],["deposit","💵 العربون"],["remaining","💳 المتبقي"],["paymentStatus","💳 حالة الدفع"],["warranty","🛡️ الضمان"],["warrantyTerms","📋 شروط الضمان"]];
 function defaultReceiptFields(){return RECEIPT_BUILTIN_FIELDS.map(([fid,label])=>({id:fid,label,enabled:true,builtin:true}))}
-function ensureReceiptFields(s){if(!s.receiptFields||!s.receiptFields.length)s.receiptFields=defaultReceiptFields();return s.receiptFields}
+// لو المستخدم خصّص قايمة بنود الإيصال بالفعل قبل إضافة بند builtin جديد
+// (زي الضمان دلوقتي)، مكانش هيظهر ليه أبدًا لأن الشرط التحت ده بيتفعّل
+// بس لو القايمة فاضية بالكامل. هنا بنضيف أي بند builtin ناقص في الآخر
+// تلقائيًا (من غير ما نلمس ترتيب أو تخصيصات المستخدم الحالية) عشان يقدر
+// يفعّله/يرتبه زي ما يحب.
+function ensureReceiptFields(s){
+  if(!s.receiptFields||!s.receiptFields.length){s.receiptFields=defaultReceiptFields();return s.receiptFields}
+  let have=new Set(s.receiptFields.map(f=>f.id));
+  RECEIPT_BUILTIN_FIELDS.forEach(([fid,label])=>{if(!have.has(fid))s.receiptFields.push({id:fid,label,enabled:true,builtin:true})});
+  return s.receiptFields;
+}
+// ===== إعدادات الضمان: تحكم كامل — تفعيل/تعطيل، مدة افتراضية، وشروط ضمان
+// (نص حر متاح كـ {شروط_الضمان} في أي رسالة واتساب، وكبند "📋 شروط الضمان"
+// قابل للتفعيل في الإيصال زي أي بند تاني) =====
+function warrantySettingHtml(){
+  let w=settings().warranty||{};
+  return `<section class="panel setting-list-panel" id="warranty-settings-panel"><details><summary>🛡️ الضمان</summary><div class="panel-body">
+    <label class="toggle-inline"><input type="checkbox" ${w.enabled!==false?"checked":""} data-wf-event="change" data-wf-code="setWarrantyEnabled(this.checked)"> تفعيل متابعة الضمان</label>
+    <div class="hint">لما مفعّل: أي أمر شغل بيتقفل (تحصيل وإغلاق) بياخد تاريخ انتهاء ضمان تلقائي بالمدة اللي تحددها تحت. تقدر تعدّل مدة الضمان لأي أمر بذاته من صفحته في أي وقت. ولو نفس الجهاز رجع بأمر جديد وهو لسه في الضمان، هتتنبّه وقت الحفظ وفي صفحة الجهاز.</div>
+    <div class="form-grid">
+      <label>المدة الافتراضية (بالأيام)<input type="number" min="0" value="${+w.days||90}" data-wf-event="change" data-wf-code="setWarrantyDays(this.value)"></label>
+    </div>
+    <label class="wide">شروط الضمان (نص حر — متاح كـ {شروط_الضمان} في أي رسالة واتساب، وكبند "📋 شروط الضمان" تقدر تفعّله في إعدادات الإيصال تحت)<textarea rows="3" data-wf-event="change" data-wf-code="setWarrantyTerms(this.value)">${esc(w.terms||"")}</textarea></label>
+  </div></details></section>`;
+}
+function setWarrantyEnabled(val){let s=settings();s.warranty=s.warranty||{};s.warranty.enabled=!!val;saveJSONSafe(K.s,s)}
+function setWarrantyDays(val){let s=settings();s.warranty=s.warranty||{};let days=+val;s.warranty.days=Number.isFinite(days)&&days>0?days:90;saveJSONSafe(K.s,s)}
+function setWarrantyTerms(val){let s=settings();s.warranty=s.warranty||{};s.warranty.terms=String(val??"").trim();saveJSONSafe(K.s,s)}
 // معاينة حيّة تحت خانة "اسم الورشة" في الإعدادات — بتتحدّث مع كل حرف تكتبه
 // (مش بس بعد الحفظ)، بنفس منطق العرض في الإيصال بالظبط (trim + رجوع
 // للاسم الافتراضي لو فاضي). الهدف إثبات الشكل النهائي فورًا وبشكل مباشر،

@@ -313,6 +313,15 @@ function markPaidAndClose(i){
   r.closed=true;
   r.closedAt=now;
   r.closeWallet=wallet;
+  // ضمان الإصلاح: لو مفعّل في الإعدادات، بنسجّل تاريخ انتهاء الضمان
+  // تلقائيًا وقت التقفيل بالمدة الافتراضية. المستخدم يقدر يعدّلها لأي
+  // أمر بذاته من صفحته في أي وقت بعد كده.
+  let wc=settings().warranty||{};
+  if(wc.enabled!==false){
+    let days=Number.isFinite(+wc.days)&&+wc.days>0?+wc.days:90;
+    r.warrantyDays=days;
+    r.warrantyUntil=days>0?new Date(new Date(now).getTime()+days*86400000).toISOString():"";
+  }
   const saved=withRollback([K.r,K.wtx],()=>{
     if(!put(K.r,a))return{ok:false};
     if(typeof syncTreasuryForOrderClose==="function")syncTreasuryForOrderClose(r,collected);

@@ -238,6 +238,13 @@
     // ما يتقفل أكتر منه، يتلوّن أحمر في القايمة ويدخل عداد "🔥 يحتاج انتباه"
     // في الداشبورد. المستخدم بيتحكم فيه بنفسه من ⚙️ الإعدادات.
     s.overdueAlertDays = Number.isFinite(+s.overdueAlertDays) && +s.overdueAlertDays > 0 ? +s.overdueAlertDays : 7;
+    // ضمان الإصلاح: مدة افتراضية (بالأيام) بتتسجل تلقائيًا على أي أمر بيتقفل،
+    // وشروط ضمان (نص حر) قابلة للاستخدام في الإيصال ورسائل واتساب. قابلين
+    // للتحكم بالكامل من ⚙️ الإعدادات ← الضمان.
+    s.warranty = s.warranty && typeof s.warranty === "object" && !Array.isArray(s.warranty) ? s.warranty : {};
+    s.warranty.enabled = s.warranty.enabled !== false;
+    s.warranty.days = Number.isFinite(+s.warranty.days) && +s.warranty.days > 0 ? +s.warranty.days : 90;
+    s.warranty.terms = typeof s.warranty.terms === "string" ? s.warranty.terms : "";
     // قراءة الإعدادات يجب ألا تتحول إلى كتابة في كل شاشة؛ هذا يقلل استهلاك
     // localStorage ويمنع ظهور أخطاء امتلاء التخزين أثناء عمليات القراءة فقط.
     const normalized = JSON.stringify(s);
