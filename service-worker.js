@@ -1,4 +1,4 @@
-const CACHE_NAME = "workshop-v11-124-wa-templates-receipt";
+const CACHE_NAME = "workshop-v11-125-outside-edit-logo";
 importScripts("./notif-shared.js");
 importScripts("./share-store.js");
 const CORE_FILES = [
@@ -72,8 +72,9 @@ const CORE_FILES = [
   "./print-share.js",
   "./print-share.css",
   "./manifest.json",
-  "./icon-192-v11-47.png",
-  "./icon-512-v11-47.png",
+  "./icon-192-v12.png",
+  "./icon-512-v12.png",
+  "./logo-header-v12.png",
   "./notif-shared.js"
 ];
 
@@ -203,7 +204,7 @@ async function runNotificationCheck() {
   if (snap.today && snap.today.length) {
     await self.registration.showNotification("📅 مواعيد اليوم", {
       body: `عندك ${snap.today.length} زيارة/زيارات اليوم.`,
-      icon: "./icon-192-v11-47.png", tag: "wf-today",
+      icon: "./icon-192-v12.png", tag: "wf-today",
       data: { url: "./requests.html?bucket=today" }
     });
     shown = true;
@@ -211,7 +212,7 @@ async function runNotificationCheck() {
   if (snap.overdue && snap.overdue.length) {
     await self.registration.showNotification("⚠️ أوامر متأخرة", {
       body: `فيه ${snap.overdue.length} أمر متأخر محتاج متابعة.`,
-      icon: "./icon-192-v11-47.png", tag: "wf-overdue",
+      icon: "./icon-192-v12.png", tag: "wf-overdue",
       data: { url: "./requests.html?bucket=overdue" }
     });
     shown = true;
@@ -219,7 +220,7 @@ async function runNotificationCheck() {
   if (snap.lowStock && snap.lowStock.length) {
     await self.registration.showNotification("📉 قطع منخفضة", {
       body: `فيه ${snap.lowStock.length} صنف وصل للحد الأدنى في المخزن.`,
-      icon: "./icon-192-v11-47.png", tag: "wf-lowstock",
+      icon: "./icon-192-v12.png", tag: "wf-lowstock",
       data: { url: "./inventory.html?bucket=low" }
     });
     shown = true;
