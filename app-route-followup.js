@@ -423,4 +423,9 @@ function initFollowupPage(){
   let dEl=document.getElementById("followupDays");if(!dEl)return;
   dEl.onchange=renderFollowup;
   renderFollowup();
+  // إعدادات رسائل واتساب الجاهزة لمتابعة العملاء بقت هنا جوه صفحة
+  // "متابعة العملاء" نفسها (مش في الإعدادات العامة)، عشان تتحكم فيها من
+  // نفس المكان اللي بتستخدمها فيه بالظبط.
+  let waHost=document.getElementById("followupWaSettingsHost");
+  if(waHost&&typeof followupWaTemplatesSettingHtml==="function")waHost.innerHTML=followupWaTemplatesSettingHtml();
 }

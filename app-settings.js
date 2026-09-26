@@ -115,7 +115,7 @@ function settingsPage(){
   brandSettings.innerHTML=s.brands.map((b,i)=>`<div class="setting-row drag-item" draggable="true" data-drag-kind="brands" data-drag-index="${i}"><span class="drag-handle" title="سحب للترتيب">☷</span><span class="setting-name"><b>${i+1}. ${esc(b)}</b></span><span class="compact-actions"><input class="order-number" type="number" min="1" max="${s.brands.length}" value="${i+1}" title="رقم الترتيب" data-wf-event="change" data-wf-code="setListPosition('brands',${i},this.value)"><button class="secondary mini-action" data-wf-event="click" data-wf-code="renameBrand('${escAttr(b)}')">✏️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="deleteBrand('${escAttr(b)}')">🗑️</button></span></div>`).join("");
   partCategorySettings.innerHTML=s.partCats.map((b,i)=>`<div class="setting-row drag-item" draggable="true" data-drag-kind="partCats" data-drag-index="${i}"><span class="drag-handle" title="سحب للترتيب">☷</span><span class="setting-name"><b>${i+1}. ${esc(b)}</b></span><span class="compact-actions"><input class="order-number" type="number" min="1" max="${s.partCats.length}" value="${i+1}" title="رقم الترتيب" data-wf-event="change" data-wf-code="setListPosition('partCats',${i},this.value)"><button class="secondary mini-action" data-wf-event="click" data-wf-code="renamePartCategory('${escAttr(b)}')">✏️</button><button class="secondary mini-action" data-wf-event="click" data-wf-code="deletePartCategory('${escAttr(b)}')">🗑️</button></span></div>`).join("");
   let host=document.getElementById("settingsDynamic");
-  if(host)host.innerHTML=`<section class="panel setting-list-panel"><details><summary>🛠️ دورة حالات أمر الشغل</summary><div class="panel-body"><div class="hint">الحالات (جديد / جاري التنفيذ / مكتمل / ملغي) وحالات الورشة (غير مطلوب / تم السحب / تم التسليم) بقت دورة معتمدة وثابتة، ومش قابلة للتعديل من هنا. الأولوية اتشالت خالص من أوامر الشغل. راجع ملف WORK_ORDER_LIFECYCLE_APPROVED.md لتفاصيل الدورة والانتقالات المسموحة.</div></div></details></section>`+returnWindowSettingHtml()+overdueAlertSettingHtml()+orderTagsSettingHtml()+[["أماكن التنفيذ","executionPlaces","📍"],["حالات الدفع","paymentStatuses","💳"],["وحدات القياس","units","📏"],["أنواع العناوين","addressTypes","🏠"]].map(x=>listEditorHtml(...x)).join("")+waTemplatesSettingHtml()+followupWaTemplatesSettingHtml()+warrantySettingHtml()+receiptSettingHtml();
+  if(host)host.innerHTML=`<section class="panel setting-list-panel"><details><summary>🛠️ دورة حالات أمر الشغل</summary><div class="panel-body"><div class="hint">الحالات (جديد / جاري التنفيذ / مكتمل / ملغي) وحالات الورشة (غير مطلوب / تم السحب / تم التسليم) بقت دورة معتمدة وثابتة، ومش قابلة للتعديل من هنا. الأولوية اتشالت خالص من أوامر الشغل. راجع ملف WORK_ORDER_LIFECYCLE_APPROVED.md لتفاصيل الدورة والانتقالات المسموحة.</div></div></details></section>`+returnWindowSettingHtml()+overdueAlertSettingHtml()+orderTagsSettingHtml()+[["أماكن التنفيذ","executionPlaces","📍"],["حالات الدفع","paymentStatuses","💳"],["وحدات القياس","units","📏"],["أنواع العناوين","addressTypes","🏠"]].map(x=>listEditorHtml(...x)).join("")+waTemplatesSettingHtml()+warrantySettingHtml()+receiptSettingHtml();
   let walletHost=document.getElementById("walletSettingsDynamic");
   if(walletHost)walletHost.innerHTML=defaultWalletSettingHtml()+[["الحسابات (محفظتي الشخصية، فودافون كاش، أورنج كاش، إنستاباي... أضف أي حساب تحب)","wallets","💳"],["التصنيف (شخصي / تشغيل / تحصيل عميل / سلفة تحويل / أخرى...)","walletCategories","🏷️"]].map(x=>inlineListEditorHtml(...x)).join("")+[["نوع المصروف — لما التصنيف \"مصروف تشغيل\" (وقود، صيانة عدة...)","expenseCategories","🧯"],["نوع المصروف — لما التصنيف \"مصروف شخصي\" (مواصلات، أكل وشرب...)","personalExpenseCategories","🙋"]].map(x=>listEditorHtml(...x)).join("")+walletCapsSettingHtml();
   let pinHost=document.getElementById("pinLockSettings");
@@ -419,6 +419,16 @@ function ensureReceiptFields(s){
 // ===== إعدادات الضمان: تحكم كامل — تفعيل/تعطيل، مدة افتراضية، وشروط ضمان
 // (نص حر متاح كـ {شروط_الضمان} في أي رسالة واتساب، وكبند "📋 شروط الضمان"
 // قابل للتفعيل في الإيصال زي أي بند تاني) =====
+function activeWarrantiesListHtml(){
+  let now=new Date();
+  let list=arr(K.r).filter(r=>r.closed&&r.warrantyUntil&&new Date(r.warrantyUntil)>=now);
+  list.sort((a,b)=>new Date(a.warrantyUntil)-new Date(b.warrantyUntil));
+  if(!list.length)return `<div class="hint">لا يوجد حاليًا أي عميل عليه ضمان سارٍ.</div>`;
+  return `<div class="setting-subhead">📋 عملاء عليهم ضمان سارٍ دلوقتي (${list.length})</div>${list.map(r=>{
+    let daysLeft=Math.ceil((new Date(r.warrantyUntil)-now)/86400000);
+    return `<div class="setting-row"><span>👤 <a href="request.html?id=${r.id}">${esc(customerName(r.customerId))}</a> — 🔧 ${esc(deviceName(r.deviceId))} <small class="hint">باقي ${daysLeft} يوم (حتى ${esc(new Date(r.warrantyUntil).toLocaleDateString("ar-EG"))})</small></span></div>`;
+  }).join("")}`;
+}
 function warrantySettingHtml(){
   let w=settings().warranty||{};
   return `<section class="panel setting-list-panel" id="warranty-settings-panel"><details><summary>🛡️ الضمان</summary><div class="panel-body">
@@ -428,6 +438,7 @@ function warrantySettingHtml(){
       <label>المدة الافتراضية (بالأيام)<input type="number" min="0" value="${+w.days||90}" data-wf-event="change" data-wf-code="setWarrantyDays(this.value)"></label>
     </div>
     <label class="wide">شروط الضمان (نص حر — متاح كـ {شروط_الضمان} في أي رسالة واتساب، وكبند "📋 شروط الضمان" تقدر تفعّله في إعدادات الإيصال تحت)<textarea rows="3" data-wf-event="change" data-wf-code="setWarrantyTerms(this.value)">${esc(w.terms||"")}</textarea></label>
+    <div id="activeWarrantiesList">${activeWarrantiesListHtml()}</div>
   </div></details></section>`;
 }
 function setWarrantyEnabled(val){let s=settings();s.warranty=s.warranty||{};s.warranty.enabled=!!val;saveJSONSafe(K.s,s)}
