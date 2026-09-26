@@ -1,4 +1,4 @@
-const CACHE_NAME = "workshop-v11-128-print-brand-fix";
+const CACHE_NAME = "workshop-v11-129-followup-log-home";
 importScripts("./notif-shared.js");
 importScripts("./share-store.js");
 const CORE_FILES = [

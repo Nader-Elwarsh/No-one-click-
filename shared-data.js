@@ -20,7 +20,7 @@
 (function (window) {
   "use strict";
 
-  const K = { c: "wf_c", d: "wf_d", r: "wf_r", p: "wf_p", s: "wf_s", m: "wf_m", e: "wf_e", tr: "wf_tr", tasks: "wf_tasks", wtx: "wf_wallet_tx", fc: "wf_fault_codes", pc: "wf_pending_calls", inv: "wf_inv", trash: "wf_trash" };
+  const K = { c: "wf_c", d: "wf_d", r: "wf_r", p: "wf_p", s: "wf_s", m: "wf_m", e: "wf_e", tr: "wf_tr", tasks: "wf_tasks", wtx: "wf_wallet_tx", fc: "wf_fault_codes", pc: "wf_pending_calls", inv: "wf_inv", trash: "wf_trash", followupLog: "wf_followup_log" };
 
   const def = {
     centers: ["مطاي", "بني مزار"],

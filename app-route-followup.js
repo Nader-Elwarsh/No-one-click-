@@ -391,6 +391,21 @@ function fillFollowupTemplate(text,x){
   };
   return String(text||"").replace(/\{([^}]+)\}/g,(m,k)=>map[k]!==undefined?map[k]:m);
 }
+// سجل رسائل المتابعة: بيحتفظ باسم العميل (مش بس الـ id، عشان يفضل مفهوم
+// حتى لو العميل اتمسح بعدين) واسم القالب ونص الرسالة كاملاً وتاريخ
+// الإرسال، عشان تقدر تعرف "مين اتبعتله إيه وإمتى" من غير ما تحتاج تفتح
+// واتساب نفسه. بيحتفظ بآخر 500 رسالة بس (الأقدم بتتشال) عشان الملف
+// مايكبرش من غير حد.
+function logFollowupSend(c,tpl,text){
+  let log=arr(K.followupLog);
+  log.push({id:id(),customerId:c.id,customerName:c.name||"",templateName:tpl.name||"رسالة",text,sentAt:new Date().toISOString()});
+  if(log.length>500)log=log.slice(log.length-500);
+  saveJSONSafe(K.followupLog,log);
+}
+function lastFollowupSendFor(customerId){
+  let log=arr(K.followupLog).filter(x=>x.customerId===customerId);
+  return log.length?log[log.length-1]:null;
+}
 function sendFollowupTemplate(customerId,tplIndex){
   let c=arr(K.c).find(x=>x.id===customerId);if(!c)return;
   let wa=typeof waNumber==="function"?waNumber(c.phone):"";
@@ -400,7 +415,19 @@ function sendFollowupTemplate(customerId,tplIndex){
   let last=orders.reduce((a,o)=>{let d=o.createdAt||"";return d>a?d:a},"");
   let daysSince=last?Math.floor((new Date()-new Date(last))/86400000):null;
   let msg=fillFollowupTemplate(tpl.text,{c,ordersCount:orders.length,last,daysSince});
+  logFollowupSend(c,tpl,msg);
   window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`,"_blank","noopener");
+  renderFollowup();
+}
+// إعادة فتح واتساب لنفس العميل بنفس نص الرسالة اللي اتبعتت قبل كده —
+// أقرب حاجة لـ"لينك مباشر للرسالة" ممكنة تقنيًا (واتساب مفيهوش رابط دائم
+// لرسالة معينة اتبعتت من قبل).
+function reopenFollowupSend(customerId,logId){
+  let c=arr(K.c).find(x=>x.id===customerId);
+  let wa=c&&typeof waNumber==="function"?waNumber(c.phone):"";
+  let entry=arr(K.followupLog).find(x=>x.id===logId);
+  if(!wa||!entry)return;
+  window.open(`https://wa.me/${wa}?text=${encodeURIComponent(entry.text)}`,"_blank","noopener");
 }
 function renderFollowup(){
   let el=document.getElementById("followupList");if(!el)return;
@@ -416,7 +443,11 @@ function renderFollowup(){
   rows.sort((a,b)=>b.daysSince-a.daysSince);
   el.innerHTML=rows.length?rows.map(x=>{
     let waRow=(templates.length&&x.c.phone)?`<div class="wa-send-row">${templates.map(t=>`<button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="sendFollowupTemplate('${x.c.id}',${t.i})">💬 ${esc(t.name||"رسالة")}</button>`).join("")}</div>`:"";
-    return `<div class="item record-card"><div class="item-head"><a href="customer.html?id=${x.c.id}"><b>👤 ${esc(x.c.name)}</b></a><span class="badge">⏳ ${x.daysSince} يوم</span></div><div>${contactLinksHtml(x.c.phone)}</div><div>📍 ${esc(addressText(x.c.mainAddress||{}))}</div><div>🛠️ ${x.ordersCount} أمر سابق • آخر أمر ${new Date(x.last).toLocaleDateString("ar-EG")}</div>${waRow}<div class="actions"><a class="primary small-btn" href="requests.html?customer=${x.c.id}&add=1">➕ أمر شغل جديد</a></div></div>`;
+    // آخر رسالة متابعة اتبعتت لنفس العميل (لو موجودة) — اسم القالب
+    // وتاريخ الإرسال، مع إمكانية فتح نفس النص تاني في واتساب وعرضه كامل.
+    let lastSend=lastFollowupSendFor(x.c.id);
+    let lastSendHtml=lastSend?`<div class="setting-row" style="margin-top:4px"><details><summary>📨 آخر رسالة اتبعتت: ${esc(lastSend.templateName)} — ${esc(new Date(lastSend.sentAt).toLocaleString("ar-EG"))}</summary><div class="hint" style="white-space:pre-wrap">${esc(lastSend.text)}</div><button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="reopenFollowupSend('${x.c.id}','${lastSend.id}')">↩️ فتحها تاني في واتساب</button></details></div>`:"";
+    return `<div class="item record-card"><div class="item-head"><a href="customer.html?id=${x.c.id}"><b>👤 ${esc(x.c.name)}</b></a><span class="badge">⏳ ${x.daysSince} يوم</span></div><div>${contactLinksHtml(x.c.phone)}</div><div>📍 ${esc(addressText(x.c.mainAddress||{}))}</div><div>🛠️ ${x.ordersCount} أمر سابق • آخر أمر ${new Date(x.last).toLocaleDateString("ar-EG")}</div>${waRow}${lastSendHtml}<div class="actions"><a class="primary small-btn" href="requests.html?customer=${x.c.id}&add=1">➕ أمر شغل جديد</a></div></div>`;
   }).join(""):'<div class="item">لا يوجد عملاء ساكتين ضمن المدة المختارة 🎉</div>';
 }
 function initFollowupPage(){
