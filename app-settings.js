@@ -22,6 +22,18 @@ async function forceAppUpdate(){
   }catch(e){console.warn("تعذر مسح الكاش بالكامل",e)}
   location.reload();
 }
+// صفحة الضمان المستقلة (warranty.html): قائمة العملاء اللي عليهم ضمان
+// سارٍ دايمًا ظاهرة فوق (مش محتاجة تدوس على حاجة عشان تشوفها)، وإعدادات
+// الضمان (تفعيل/مدة/شروط) موجودة تحتها في نفس الصفحة كقسم قابل للطي —
+// وزرار ⚙️ في أعلى الصفحة بيوديك لنفس الإعدادات دي كمان لو حبيت من صفحة
+// الإعدادات العامة.
+function initWarrantyPage(){
+  let listHost=document.getElementById("warrantyActiveList");
+  if(!listHost)return;
+  listHost.innerHTML=activeWarrantiesListHtml();
+  let settingsHost=document.getElementById("warrantySettingsHost");
+  if(settingsHost)settingsHost.innerHTML=warrantySettingHtml();
+}
 function openSettingsPanelFromHash(){
   let hash=(location.hash||"").replace(/^#/,"");
   if(!hash)return;
@@ -438,7 +450,7 @@ function warrantySettingHtml(){
       <label>المدة الافتراضية (بالأيام)<input type="number" min="0" value="${+w.days||90}" data-wf-event="change" data-wf-code="setWarrantyDays(this.value)"></label>
     </div>
     <label class="wide">شروط الضمان (نص حر — متاح كـ {شروط_الضمان} في أي رسالة واتساب، وكبند "📋 شروط الضمان" تقدر تفعّله في إعدادات الإيصال تحت)<textarea rows="3" data-wf-event="change" data-wf-code="setWarrantyTerms(this.value)">${esc(w.terms||"")}</textarea></label>
-    <div id="activeWarrantiesList">${activeWarrantiesListHtml()}</div>
+    ${location.pathname.indexOf("warranty.html")===-1?`<div class="hint">قائمة العملاء اللي عليهم ضمان سارٍ دلوقتي بقت في صفحتها المستقلة: <a href="warranty.html">🛡️ الضمان</a>.</div>`:""}
   </div></details></section>`;
 }
 function setWarrantyEnabled(val){let s=settings();s.warranty=s.warranty||{};s.warranty.enabled=!!val;saveJSONSafe(K.s,s)}

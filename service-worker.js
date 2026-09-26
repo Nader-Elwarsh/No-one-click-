@@ -1,4 +1,4 @@
-const CACHE_NAME = "workshop-v11-129-followup-log-home";
+const CACHE_NAME = "workshop-v11-130-warranty-page";
 importScripts("./notif-shared.js");
 importScripts("./share-store.js");
 const CORE_FILES = [
@@ -6,6 +6,7 @@ const CORE_FILES = [
   "./index.html",
   "./route.html",
   "./followup.html",
+  "./warranty.html",
   "./customers.html",
   "./customer.html",
   "./devices.html",
