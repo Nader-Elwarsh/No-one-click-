@@ -561,12 +561,12 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 @media print{:root,[data-theme="dark"]{--bg:#fff;--bg-elevated:#fff;--bg-sunken:#f7f9fb;--text:#111;--text-muted:#555;--border:#ddd}}
 
 /* زرار تبديل المظهر (فاتح/داكن) */
-.theme-toggle-btn{border:0;border-radius:50%;width:38px;height:38px;min-width:38px;display:inline-flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;background:rgba(255,255,255,.16);color:#fff;transition:background .15s,transform .12s;text-decoration:none}
-.theme-toggle-btn:hover{background:rgba(255,255,255,.28)}
-.theme-toggle-btn:active{transform:scale(.92)}
+.theme-toggle-btn,.icon-nav-btn{border:0;border-radius:50%;width:38px;height:38px;min-width:38px;display:inline-flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;background:rgba(255,255,255,.16);color:#fff;transition:background .15s,transform .12s;text-decoration:none}
+.theme-toggle-btn:hover,.icon-nav-btn:hover{background:rgba(255,255,255,.28)}
+.theme-toggle-btn:active,.icon-nav-btn:active{transform:scale(.92)}
 .page-topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
 .page-topbar .back{margin-bottom:0}
-.page-topbar .theme-toggle-btn{background:var(--bg-sunken);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.page-topbar .theme-toggle-btn,.page-topbar .icon-nav-btn{background:var(--bg-sunken);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.08)}
 
 /* رأس الصفحة الرئيسية: تحية وتاريخ اليوم */
 .home-greeting{max-width:950px;margin:10px auto 0;padding:0 16px;color:var(--text-muted);font-size:13px}

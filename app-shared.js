@@ -314,10 +314,12 @@ function markPaidAndClose(i){
   r.closedAt=now;
   r.closeWallet=wallet;
   // ضمان الإصلاح: لو مفعّل في الإعدادات، بنسجّل تاريخ انتهاء الضمان
-  // تلقائيًا وقت التقفيل بالمدة الافتراضية. المستخدم يقدر يعدّلها لأي
-  // أمر بذاته من صفحته في أي وقت بعد كده.
+  // تلقائيًا وقت التقفيل بالمدة الافتراضية — لكن بس لو المستخدم ماحددش
+  // مدة يدويًا بنفسه قبل كده (r.warrantyManual). لو كان غيّرها يدويًا
+  // (حتى لو صفر لأمر كشف/معاينة مالوش ضمان)، بنسيب اختياره زي ما هو
+  // وميتكتبش فوقه بالمدة الافتراضية تاني.
   let wc=settings().warranty||{};
-  if(wc.enabled!==false){
+  if(wc.enabled!==false&&!r.warrantyManual){
     let days=Number.isFinite(+wc.days)&&+wc.days>0?+wc.days:90;
     r.warrantyDays=days;
     r.warrantyUntil=days>0?new Date(new Date(now).getTime()+days*86400000).toISOString():"";

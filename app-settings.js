@@ -447,15 +447,30 @@ function warrantySettingHtml(){
     <label class="toggle-inline"><input type="checkbox" ${w.enabled!==false?"checked":""} data-wf-event="change" data-wf-code="setWarrantyEnabled(this.checked)"> تفعيل متابعة الضمان</label>
     <div class="hint">لما مفعّل: أي أمر شغل بيتقفل (تحصيل وإغلاق) بياخد تاريخ انتهاء ضمان تلقائي بالمدة اللي تحددها تحت. تقدر تعدّل مدة الضمان لأي أمر بذاته من صفحته في أي وقت. ولو نفس الجهاز رجع بأمر جديد وهو لسه في الضمان، هتتنبّه وقت الحفظ وفي صفحة الجهاز.</div>
     <div class="form-grid">
-      <label>المدة الافتراضية (بالأيام)<input type="number" min="0" value="${+w.days||90}" data-wf-event="change" data-wf-code="setWarrantyDays(this.value)"></label>
+      <label>المدة الافتراضية (بالأيام)<input type="number" min="0" id="warrantyDaysInput" value="${+w.days||90}"></label>
     </div>
-    <label class="wide">شروط الضمان (نص حر — متاح كـ {شروط_الضمان} في أي رسالة واتساب، وكبند "📋 شروط الضمان" تقدر تفعّله في إعدادات الإيصال تحت)<textarea rows="3" data-wf-event="change" data-wf-code="setWarrantyTerms(this.value)">${esc(w.terms||"")}</textarea></label>
+    <button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="confirmWarrantyDays()">✅ تأكيد المدة</button>
+    <label class="wide">شروط الضمان (نص حر — متاح كـ {شروط_الضمان} في أي رسالة واتساب، وكبند "📋 شروط الضمان" تقدر تفعّله في إعدادات الإيصال تحت)<textarea rows="3" id="warrantyTermsInput">${esc(w.terms||"")}</textarea></label>
+    <button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="confirmWarrantyTerms()">✅ تأكيد الشروط</button>
     ${location.pathname.indexOf("warranty.html")===-1?`<div class="hint">قائمة العملاء اللي عليهم ضمان سارٍ دلوقتي بقت في صفحتها المستقلة: <a href="warranty.html">🛡️ الضمان</a>.</div>`:""}
   </div></details></section>`;
 }
 function setWarrantyEnabled(val){let s=settings();s.warranty=s.warranty||{};s.warranty.enabled=!!val;saveJSONSafe(K.s,s)}
 function setWarrantyDays(val){let s=settings();s.warranty=s.warranty||{};let days=+val;s.warranty.days=Number.isFinite(days)&&days>0?days:90;saveJSONSafe(K.s,s)}
 function setWarrantyTerms(val){let s=settings();s.warranty=s.warranty||{};s.warranty.terms=String(val??"").trim();saveJSONSafe(K.s,s)}
+// المدة الافتراضية وشروط الضمان بقوا محتاجين ضغطة "✅ تأكيد" صريحة بدل
+// الحفظ التلقائي بمجرد الخروج من الخانة (change) — عشان مايتحفظش رقم أو
+// نص اتغيّر بالغلط من غير قصد.
+function confirmWarrantyDays(){
+  let input=document.getElementById("warrantyDaysInput");
+  if(!input)return;
+  setWarrantyDays(input.value);
+}
+function confirmWarrantyTerms(){
+  let input=document.getElementById("warrantyTermsInput");
+  if(!input)return;
+  setWarrantyTerms(input.value);
+}
 // معاينة حيّة تحت خانة "اسم الورشة" في الإعدادات — بتتحدّث مع كل حرف تكتبه
 // (مش بس بعد الحفظ)، بنفس منطق العرض في الإيصال بالظبط (trim + رجوع
 // للاسم الافتراضي لو فاضي). الهدف إثبات الشكل النهائي فورًا وبشكل مباشر،
