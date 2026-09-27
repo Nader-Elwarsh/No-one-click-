@@ -436,10 +436,21 @@ function activeWarrantiesListHtml(){
   let list=arr(K.r).filter(r=>r.closed&&r.warrantyUntil&&new Date(r.warrantyUntil)>=now);
   list.sort((a,b)=>new Date(a.warrantyUntil)-new Date(b.warrantyUntil));
   if(!list.length)return `<div class="hint">لا يوجد حاليًا أي عميل عليه ضمان سارٍ.</div>`;
-  return `<div class="setting-subhead">📋 عملاء عليهم ضمان سارٍ دلوقتي (${list.length})</div>${list.map(r=>{
+  // شكل جدول مختصر بدل السطر الطويل: اسم أول بس (مش الاسم كامل — كامله
+  // موجود في tooltip)، ونوع الجهاز بس من غير الماركة (مختصر)، وعدد
+  // الأيام المتبقية بس من غير تاريخ كامل. كل خلية لينك مستقل: للعميل
+  // تودّي لأمر الشغل، وللجهاز تودّي لصفحة الجهاز نفسه. مرتبة أقرب ضمان
+  // هيخلص الأول.
+  let rows=list.map(r=>{
     let daysLeft=Math.ceil((new Date(r.warrantyUntil)-now)/86400000);
-    return `<div class="setting-row"><span>👤 <a href="request.html?id=${r.id}">${esc(customerName(r.customerId))}</a> — 🔧 ${esc(deviceName(r.deviceId))} <small class="hint">باقي ${daysLeft} يوم (حتى ${esc(new Date(r.warrantyUntil).toLocaleDateString("ar-EG"))})</small></span></div>`;
-  }).join("")}`;
+    let fullName=customerName(r.customerId)||"—";
+    let firstName=fullName.split(/\s+/)[0]||fullName;
+    let dev=arr(K.d).find(d=>d.id===r.deviceId);
+    let devType=dev?.type||"—";
+    let devFull=deviceName(r.deviceId);
+    return `<tr><td><a href="request.html?id=${r.id}" title="${esc(fullName)}">${esc(firstName)}</a></td><td><a href="device.html?id=${r.deviceId}" title="${esc(devFull)}">${esc(devType)}</a></td><td>${daysLeft} يوم</td></tr>`;
+  }).join("");
+  return `<div class="setting-subhead">📋 عملاء عليهم ضمان سارٍ دلوقتي (${list.length})</div><div class="report-table-wrap"><table class="report-table-full"><tr><th>العميل</th><th>الجهاز</th><th>الأيام المتبقية</th></tr>${rows}</table></div>`;
 }
 function warrantySettingHtml(){
   let w=settings().warranty||{};

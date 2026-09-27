@@ -1,4 +1,4 @@
-const CACHE_NAME = "workshop-v11-132-warranty-fixes";
+const CACHE_NAME = "workshop-v11-133-warranty-table";
 importScripts("./notif-shared.js");
 importScripts("./share-store.js");
 const CORE_FILES = [
