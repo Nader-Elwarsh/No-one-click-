@@ -448,6 +448,176 @@ function buildReceiptText(r){
   if((info.footer||"").trim())out+="\n"+sep+"\n"+info.footer.trim();
   return out;
 }
+// بيلف نص طويل على أكتر من سطر حسب العرض المتاح على الكانفاس، كلمة
+// كلمة، ولو كلمة واحدة (رقم هاتف مثلاً) أطول من العرض نفسه بيلفها حرف
+// حرف. من غير اللف ده أي نص طويل كان هيتقطع برّه حواف الصورة.
+function wrapCanvasText(ctx,text,maxWidth){
+  let words=String(text||"").split(/\s+/).filter(Boolean);
+  let lines=[],cur="";
+  for(let w of words){
+    let test=cur?cur+" "+w:w;
+    if(ctx.measureText(test).width<=maxWidth){cur=test;continue}
+    if(cur)lines.push(cur);
+    if(ctx.measureText(w).width>maxWidth){
+      let sub="";
+      for(let ch of w){
+        let t2=sub+ch;
+        if(ctx.measureText(t2).width<=maxWidth)sub=t2;
+        else{lines.push(sub);sub=ch;}
+      }
+      cur=sub;
+    }else cur=w;
+  }
+  if(cur)lines.push(cur);
+  return lines.length?lines:[""];
+}
+// صورة للإيصال (PNG) بنفس بيانات الإيصال بالظبط — بديل لما تحب ترفق شكل
+// احترافي يدوي (مش إرسال نص مباشر). الأهم: الارتفاع بيتحسب بتمريرة قياس
+// أولى قبل الرسم الفعلي حسب طول المحتوى الحقيقي (اسم الورشة/العنوان/كل
+// حقل)، مش ارتفاع ثابت — فأي نص تضيفه (حتى لو طويل جدًا) ياخد المساحة
+// اللي محتاجها فعليًا ومفيش أي قص/اقتطاع لأي حاجة أبدًا.
+async function shareReceiptImageView(requestId){
+  let r=arr(K.r).find(x=>x.id===requestId);if(!r)return;
+  try{await buildAndShareReceiptImage(r)}
+  catch(e){console.warn("تعذر إنشاء صورة الإيصال",e);alert("تعذر إنشاء صورة الإيصال على هذا الجهاز.")}
+}
+async function buildAndShareReceiptImage(r){
+  let s=settings();
+  let info=s.receiptInfo||{};
+  let fields=(s.receiptFields&&s.receiptFields.length?s.receiptFields:defaultReceiptFields()).filter(f=>f.enabled!==false);
+  let cust=arr(K.c).find(c=>c.id===r.customerId)||{};
+  let partsListText=(r.parts||[]).map(x=>{
+    let p=x.external?null:arr(K.p).find(z=>z.id===x.partId);
+    let nm=x.external?(x.name||"قطعة خارجية"):(p?.name||"قطعة محذوفة");
+    let amount=(x.qty||0)*(x.sell||0);
+    return `${nm} × ${x.qty} = ${amount.toFixed(2)} ج`;
+  }).join("، ")||"—";
+  const valueFor={
+    orderNo: r.no||"—",
+    orderDate: requestCreatedDate(r)?requestCreatedDate(r).toLocaleString("ar-EG"):"—",
+    customerName: customerName(r.customerId),
+    customerPhone: cust.phone||"—",
+    deviceInfo: deviceName(r.deviceId),
+    fault: r.fault||"—",
+    work: r.work||"—",
+    partsList: partsListText,
+    labor: (+r.labor||0).toFixed(2)+" ج",
+    partsTotal: (+r.partsTotal||0).toFixed(2)+" ج",
+    total: (+r.total||0).toFixed(2)+" ج",
+    deposit: (+r.deposit||0).toFixed(2)+" ج",
+    remaining: Math.max(0,(+r.total||0)-(+r.deposit||0)).toFixed(2)+" ج",
+    paymentStatus: r.paid?"مدفوع بالكامل":"غير مكتمل",
+    warranty: r.warrantyUntil?(new Date(r.warrantyUntil)>=new Date()?`سارٍ حتى ${new Date(r.warrantyUntil).toLocaleDateString("ar-EG")}`:`انتهى في ${new Date(r.warrantyUntil).toLocaleDateString("ar-EG")}`):"—",
+    warrantyTerms: (settings().warranty||{}).terms||""
+  };
+  let rowsData=fields.map(f=>{
+    let val=f.builtin?valueFor[f.id]:(f.staticText||"");
+    if(val===undefined||val==="")return null;
+    return {label:f.label||"",value:String(val)};
+  }).filter(Boolean);
+
+  const W=720,PAD=32;
+  const nameFont='bold 34px system-ui,-apple-system,"Segoe UI",Tahoma,Arial';
+  const subFont='20px system-ui,-apple-system,"Segoe UI",Tahoma,Arial';
+  const labelFont='bold 22px system-ui,-apple-system,"Segoe UI",Tahoma,Arial';
+  const valueFont='22px system-ui,-apple-system,"Segoe UI",Tahoma,Arial';
+  const footerFont='18px system-ui,-apple-system,"Segoe UI",Tahoma,Arial';
+  const contentWidth=W-PAD*2;
+
+  const canvas=document.createElement("canvas");
+  const ctx=canvas.getContext("2d");
+  if(!ctx)throw new Error("canvas 2d context not available");
+  ctx.direction="rtl";
+
+  // ===== تمريرة القياس: نحسب عدد الأسطر المطلوبة فعليًا لكل جزء =====
+  ctx.font=nameFont;
+  const nameLines=wrapCanvasText(ctx,(info.name||"").trim()||"الورشة الفنية",contentWidth);
+  ctx.font=subFont;
+  const phoneLines=(info.phone||"").trim()?wrapCanvasText(ctx,"📞 "+info.phone.trim(),contentWidth):[];
+  const addrLines=(info.address||"").trim()?wrapCanvasText(ctx,"📍 "+info.address.trim(),contentWidth):[];
+  const rowLineSets=rowsData.map(row=>{
+    ctx.font=valueFont;
+    let oneLine=row.label+": "+row.value;
+    if(ctx.measureText(oneLine).width<=contentWidth)return [oneLine];
+    return [row.label+":", ...wrapCanvasText(ctx,row.value,contentWidth-20)];
+  });
+  ctx.font=footerFont;
+  const footerLines=(info.footer||"").trim()?wrapCanvasText(ctx,info.footer.trim(),contentWidth):[];
+
+  let y=PAD;
+  y+=nameLines.length*40;
+  y+=phoneLines.length*26;
+  y+=addrLines.length*26;
+  y+=10+2+20;
+  rowLineSets.forEach(vLines=>{y+=vLines.length*30+14});
+  if(footerLines.length)y+=6+footerLines.length*24;
+  y+=PAD;
+
+  canvas.width=W;
+  canvas.height=Math.ceil(y);
+
+  // ===== تمريرة الرسم الفعلي بنفس القياسات بالظبط =====
+  ctx.direction="rtl";
+  ctx.fillStyle="#ffffff";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="#111111";
+  ctx.textBaseline="top";
+
+  let cy=PAD;
+  ctx.font=nameFont;ctx.textAlign="center";
+  nameLines.forEach(l=>{ctx.fillText(l,W/2,cy);cy+=40});
+  ctx.font=subFont;
+  phoneLines.forEach(l=>{ctx.fillText(l,W/2,cy);cy+=26});
+  addrLines.forEach(l=>{ctx.fillText(l,W/2,cy);cy+=26});
+  cy+=10;
+  ctx.strokeStyle="#111111";ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(PAD,cy);ctx.lineTo(W-PAD,cy);ctx.stroke();
+  cy+=20;
+
+  ctx.textAlign="right";
+  rowsData.forEach((row,i)=>{
+    let vLines=rowLineSets[i];
+    if(vLines.length===1){
+      ctx.font=labelFont;
+      ctx.fillText(row.label+": ",W-PAD,cy);
+      let labelW=ctx.measureText(row.label+": ").width;
+      ctx.font=valueFont;
+      ctx.fillText(row.value,W-PAD-labelW,cy);
+      cy+=30;
+    }else{
+      ctx.font=labelFont;
+      ctx.fillText(vLines[0],W-PAD,cy);cy+=30;
+      ctx.font=valueFont;
+      for(let k=1;k<vLines.length;k++){ctx.fillText(vLines[k],W-PAD-20,cy);cy+=30}
+    }
+    ctx.strokeStyle="#dddddd";ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(PAD,cy+4);ctx.lineTo(W-PAD,cy+4);ctx.stroke();
+    cy+=14;
+  });
+
+  if(footerLines.length){
+    cy+=6;
+    ctx.font=footerFont;ctx.textAlign="center";ctx.fillStyle="#555555";
+    footerLines.forEach(l=>{ctx.fillText(l,W/2,cy);cy+=24});
+  }
+
+  canvas.toBlob(async blob=>{
+    try{
+      if(!blob)return alert("تعذر إنشاء صورة الإيصال.");
+      const fileName="receipt-"+(r.no||r.id)+".png";
+      const file=new File([blob],fileName,{type:"image/png"});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){
+        try{await navigator.share({files:[file],title:"إيصال "+(r.no||"")});return}
+        catch(e){if(e?.name==="AbortError")return}
+      }
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");
+      a.href=url;a.download=fileName;
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),10000);
+    }catch(e){console.warn("تعذر مشاركة/تحميل صورة الإيصال",e);alert("تعذر حفظ أو مشاركة صورة الإيصال.")}
+  },"image/png");
+}
 function ensureReceiptPrintHost(r){
   let host=document.getElementById("receiptPrintArea");
   if(!host){host=document.createElement("div");host.id="receiptPrintArea";host.className="hidden";document.body.appendChild(host)}
@@ -480,5 +650,5 @@ function shareReceiptView(requestId){
 function requestCommActionsHtml(r,custPhone){
   let templates=(settings().waTemplates||[]).map((t,i)=>({...t,i})).filter(t=>t.enabled!==false);
   let waRow=(templates.length&&custPhone)?`<div class="wa-send-row">${templates.map(t=>`<button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="sendWaTemplate('${r.id}',${t.i})">💬 ${esc(t.name||"رسالة")}</button>`).join("")}</div>`:"";
-  return `<div class="request-comm-actions no-print">${waRow}<div class="receipt-actions-row"><button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="printReceiptView('${r.id}')">🖨️ طباعة الإيصال</button><button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="shareReceiptView('${r.id}')">💬 إرسال الإيصال واتساب</button></div></div>`;
+  return `<div class="request-comm-actions no-print">${waRow}<div class="receipt-actions-row"><button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="printReceiptView('${r.id}')">🖨️ طباعة الإيصال</button><button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="shareReceiptView('${r.id}')">💬 إرسال الإيصال واتساب</button><button type="button" class="secondary mini-action" data-wf-event="click" data-wf-code="shareReceiptImageView('${r.id}')">🖼️ صورة الإيصال</button></div></div>`;
 }
